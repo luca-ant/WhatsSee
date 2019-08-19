@@ -35,33 +35,33 @@ def download_dataset():
                                             cache_subdir=os.path.abspath("."),
                                             origin='http://images.cocodataset.org/zips/train2014.zip',
                                             extract=True)
-        dataset_file_path = os.path.dirname(image_zip) + '/train2014/'
+        dataset_dir_path = os.path.dirname(image_zip) + '/train2014/'
     else:
-        dataset_file_path = os.path.abspath('.') + '/train2014/'
+        dataset_dir_path = os.path.abspath('.') + '/train2014/'
 
     os.chdir("..")
-    
-    return (os.path.abspath(caption_file_path), os.path.abspath(dataset_file_path))
+
+    return (os.path.abspath(caption_file_path), os.path.abspath(dataset_dir_path))
 
 
-caption_file_path, dataset_file_path = download_dataset()
+caption_file_path, dataset_dir_path = download_dataset()
 
-print(caption_file_path, dataset_file_path)
+print(caption_file_path, dataset_dir_path)
 
 with open(caption_file_path, 'r') as f:
-    annotations = json.load(f)
+    captions = json.load(f)
 
 # Store captions and image names in vectors
 all_captions = []
 all_images_name = []
 
-for annot in annotations['annotations']:
-    caption = '<start> ' + annot['caption'] + ' <end>'
-    image_id = annot['image_id']
-    full_coco_image_path = dataset_file_path + 'COCO_train2014_' + '%012d.jpg' % (image_id)
+for c in captions['annotations']:
+    caption_string = '<start> ' + c['caption'] + ' <end>'
+    image_id = c['image_id']
+    full_coco_image_path = dataset_dir_path + 'COCO_train2014_' + '%012d.jpg' % (image_id)
 
     all_images_name.append(full_coco_image_path)
-    all_captions.append(caption)
+    all_captions.append(caption_string)
 
 # Shuffle captions and image_names
 train_captions, img_name_vector = random.shuffle(all_captions,
