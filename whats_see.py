@@ -22,11 +22,11 @@ def download_dataset():
                                               cache_subdir=os.path.abspath('.'),
                                               origin='http://images.cocodataset.org/annotations/annotations_trainval2014.zip',
                                               extract=True)
-        caption_file_path = os.path.dirname(caption_zip) + '/captions/captions_train2014.json'
+        caption_file_path = os.path.dirname(caption_zip) + '/annotations/captions_train2014.json'
 
 
     else:
-        caption_file_path = os.path.abspath('.') + '/captions/captions_train2014.json'
+        caption_file_path = os.path.abspath('.') + '/annotations/captions_train2014.json'
 
     name_of_zip = 'train2014.zip'
 
