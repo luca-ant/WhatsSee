@@ -3,83 +3,16 @@ import json
 import collections
 import string
 import random
+
+import progressbar
 from PIL import Image
 import numpy as np
 
 import tensorflow as tf
-from keras_preprocessing import image
-from tensorflow import keras
-from tensorflow.python.keras.applications import InceptionV3
-from tensorflow.python.keras.applications.inception_v3 import preprocess_input
-
-data_path = "./data/"
-
-if not os.path.isdir(data_path):
-    os.makedirs(data_path)
-
-
-def download_dataset():
-    os.chdir(data_path)
-
-    name_of_zip = 'captions.zip'
-
-    if not os.path.exists(os.path.abspath('.') + '/' + name_of_zip):
-
-        caption_zip = tf.keras.utils.get_file(name_of_zip,
-                                              cache_subdir=os.path.abspath('.'),
-                                              origin='http://images.cocodataset.org/annotations/annotations_trainval2014.zip',
-                                              extract=True)
-        caption_file_path = os.path.dirname(caption_zip) + '/annotations/captions_train2014.json'
-
-
-
-
-
-
-    else:
-        caption_file_path = os.path.abspath('.') + '/annotations/captions_train2014.json'
-        print("Captions already exists")
-
-    name_of_zip = 'train2014.zip'
-    #   name_of_zip = 'test2014.zip'
-
-    if not os.path.exists(os.path.abspath('.') + '/' + name_of_zip):
-
-        image_zip = tf.keras.utils.get_file(name_of_zip,
-                                            cache_subdir=os.path.abspath("."),
-                                            origin='http://images.cocodataset.org/zips/train2014.zip',
-                                            extract=True)
-        dataset_dir_path = os.path.dirname(image_zip) + '/train2014/'
-        """
-
-        image_zip = tf.keras.utils.get_file(name_of_zip,
-                                            cache_subdir=os.path.abspath("."),
-                                            origin='http://images.cocodataset.org/zips/test2014.zip',
-                                            extract=True)
-        dataset_dir_path = os.path.dirname(image_zip) + '/test2014/'
-        """
-
-    else:
-        dataset_dir_path = os.path.abspath('.') + '/train2014/'
-        #    dataset_dir_path = os.path.abspath('.') + '/test2014/'
-        print("Images dataset already exists")
-
-    os.chdir("..")
-
-    return (os.path.abspath(caption_file_path), os.path.abspath(dataset_dir_path))
-
-
-def load_captions(caption_file_path):
-    all_captions = collections.defaultdict(list)
-    with open(caption_file_path, 'r') as f:
-        captions = json.load(f)
-
-    for c in captions['annotations']:
-        caption_string = c['caption']
-        image_id = c['image_id']
-        all_captions[image_id].append(caption_string)
-
-    return all_captions
+from keras import models
+from keras.applications import VGG16
+from keras.applications.vgg16 import preprocess_input
+from tensorflow.python.keras.preprocessing import image
 
 
 def clean_captions(all_captions):
@@ -139,14 +72,6 @@ def load_all_images_name(dataset_dir_path):
     return os.listdir(dataset_dir_path)
 
 
-def load_images_name(dataset_dir_path, images_id_list):
-    images_name_list = []
-    for id in images_id_list:
-        image_name = 'COCO_train2014_' + '%012d.jpg' % (id)
-        if os.path.isfile(dataset_dir_path + "/" + image_name):
-            images_name_list.append(image_name)
-
-    return images_name_list
 
 
 def preprocess_images(dataset_dir_path, train_images_name, output_file_name):
@@ -159,28 +84,34 @@ def preprocess_images(dataset_dir_path, train_images_name, output_file_name):
     else:
     """
     os.chdir(dataset_dir_path)
-    # Get the InceptionV3 model trained on imagenet data
-    model = InceptionV3(weights='imagenet')
-    # Remove the last layer (output softmax layer) from the inception v3
-    model_new = keras.Model(model.input, model.layers[-2].output)
 
     images_as_vector = collections.defaultdict()
 
-    for image_path in train_images_name:
-        # Convert all the images to size 299x299 as expected by the
-        # inception v3 model
-        img = image.load_img(image_path, target_size=(299, 299))
-        # Convert PIL image to numpy array of 3-dimensions
-        i = image.img_to_array(img)
-        # Add one more dimension
-        i = np.expand_dims(i, axis=0)
-        # preprocess images using preprocess_input() from inception module
-        i = preprocess_input(i)
-        # reshape from (1, 2048) to (2048, )
-        i = np.reshape(i, i.shape[1])
-        images_as_vector[image_path] = i
+    modelvgg = VGG16(include_top=True, weights=None)
+    #       modelvgg.load_weights("../input/vgg16-weights-image-captioning/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
 
-    with open(output_file_name, 'w') as outfile:
-        outfile.write(json.dumps(images_as_vector))
+    modelvgg.layers.pop()
+    modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)
+    modelvgg.summary()
+
+    with progressbar.ProgressBar(max_value=len(train_images_name)) as bar:
+        for i, image_path in enumerate(train_images_name):
+            img = image.load_img(image_path, target_size=(224, 224,3))
+
+            im = image.img_to_array(img)
+
+
+            im = preprocess_input(im)
+            im_pred = modelvgg.predict(im.reshape((1,) + im.shape[:3]))
+
+
+
+            images_as_vector[image_path] = im_pred.flatten()
+            bar.update(i)
 
     return images_as_vector
+
+"""
+    with open(output_file_name, 'w') as outfile:
+        outfile.write(json.dumps(images_as_vector)
+"""
