@@ -12,13 +12,13 @@ from tensorflow import keras
 # Helper libraries
 import numpy as np
 
-from process_data import download_dataset, load_all_images_name
+from model import Dataset
 
 checkpoint_path = "./checkpoints/cp-{epoch:04d}.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 
-caption_file_path, dataset_dir_path = download_dataset()
-all_images_name_list = load_all_images_name(dataset_dir_path)
+caption_file_path, dataset_dir_path = Dataset.download_dataset()
+all_images_name_list = Dataset.load_all_images_name()
 
 num_training_examples = 3
 
@@ -80,6 +80,7 @@ for image_path in train_images_name:
     latest = tf.train.latest_checkpoint(checkpoint_dir)
     
     model.load_weights(latest)
+    
     loss, acc = model.evaluate(test_images, test_labels)
     print("Restored model, accuracy: {:5.2f}%".format(100*acc))
     """

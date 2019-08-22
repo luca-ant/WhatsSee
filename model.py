@@ -2,6 +2,27 @@ import collections
 import json
 import os
 import tensorflow as tf
+from keras import Input, Model
+from keras.layers import Dropout, Dense, LSTM, Embedding, add
+
+
+def create_NN(vocab_size, max_cap_len):
+    input_image = Input(shape=(4096,))
+    fe1 = Dropout(0.5)(input_image)
+    fe2 = Dense(256, activation='relu')(fe1)
+
+    input_text = Input(shape=(max_cap_len,))
+    se1 = Embedding(vocab_size, 64, mask_zero=True)(input_text)
+    se2 = Dropout(0.5)(se1)
+    se3 = LSTM(256)(se2)
+
+    decoder1 = add([fe2, se3])
+    decoder2 = Dense(256, activation='relu')(decoder1)
+    outputs = Dense(vocab_size, activation='softmax')(decoder2)
+
+    model = Model(inputs=[input_image, input_text], outputs=outputs)
+
+    return model
 
 
 class Dataset:
@@ -16,6 +37,10 @@ class Dataset:
     @staticmethod
     def load_images_name(dataset, images_id_list):
         return dataset.load_images_name(images_id_list)
+
+    @staticmethod
+    def get_image_name(dataset, image_id):
+        return dataset.get_image_name(image_id)
 
 
 class FlickrDataset():
@@ -107,3 +132,7 @@ class COCODataset():
                 images_name_list.append(image_name)
 
         return images_name_list
+
+    def get_image_name(self, image_id):
+        image_name = "COCO_train2014_"+ "%012d.jpg" % (image_id)
+        return image_name
