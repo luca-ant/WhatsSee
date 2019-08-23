@@ -7,14 +7,13 @@ import random
 import progressbar
 import numpy as np
 
-import tensorflow as tf
-from keras import models, Model
+from keras import models
 from keras.applications import VGG16
 from keras.applications.vgg16 import preprocess_input
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
-from tensorflow.python.keras.preprocessing import image
 
+from tensorflow.python.keras.preprocessing import image
 from model import Dataset
 
 
@@ -31,14 +30,13 @@ def clean_captions(all_captions):
 
             # convert to lower case
             cap = [word.lower() for word in cap]
-            # remove punctuation from each token
 
+            # remove punctuation from each token
             cap = [w.translate(punt) for w in cap]
 
             cap = [word for word in cap if len(word) > 1]
 
             # desc = [word for word in desc if word.isalpha()]
-
             capt_list_cleaned.append(' '.join(cap))
 
         all_captions_cleaned[key] = capt_list_cleaned
@@ -79,7 +77,8 @@ def preprocess_images(dataset_dir_path, train_images_name):
 
     images_as_vector = collections.defaultdict()
 
-    modelvgg = VGG16(include_top=True, weights=None)
+    #   modelvgg = VGG16(include_top=True, weights=None)
+    modelvgg = VGG16(include_top=True)
     #       modelvgg.load_weights("../input/vgg16-weights-image-captioning/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
 
     modelvgg.layers.pop()
@@ -106,7 +105,6 @@ def prepare_data(dataset, train_captions, train_images_as_vector, word_index_dic
     for image_id, cap_list in train_captions.items():
 
         image_name = Dataset.get_image_name(dataset, image_id)
-        print(image_name)
         image = train_images_as_vector[image_name]
 
         for c in cap_list:
@@ -132,7 +130,8 @@ def prepare_data(dataset, train_captions, train_images_as_vector, word_index_dic
 def predict_caption(model, dataset_dir_path, image_name, max_cap_len, word_index_dict, index_word_dict):
     os.chdir(dataset_dir_path)
 
-    modelvgg = VGG16(include_top=True, weights=None)
+    # modelvgg = VGG16(include_top=True, weights=None)
+    modelvgg = VGG16(include_top=True)
     #       modelvgg.load_weights("../input/vgg16-weights-image-captioning/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
 
     modelvgg.layers.pop()
