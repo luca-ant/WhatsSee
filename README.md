@@ -37,7 +37,6 @@ python3.7 -m pip install -r requirements.txt
 
 ```
 python whats_see.py train dataset=flickr 
-
 ```
 ```
 python whats_see.py predict filename=your_image_file 
