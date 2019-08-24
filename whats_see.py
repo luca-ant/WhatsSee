@@ -141,20 +141,18 @@ if mode == "train":
 
     model = create_NN(len(vocabulary), max_cap_len)
 
-    x_text, x_image, y_caption = prepare_data(dataset, train_captions, train_images_as_vector, word_index_dict,
-                                              len(vocabulary),
-                                              max_cap_len)
-
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
 
-    #  history = model.fit([x_image, x_text], y_caption, epochs=3, verbose=1,batch_size=16)
+    # x_text, x_image, y_caption = prepare_data(dataset, train_captions, train_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
+
+    # history = model.fit([x_image, x_text], y_caption, epochs=3, verbose=1,batch_size=16)
 
     epochs = 10
     num_photos_per_batch = 16
     steps = len(train_captions)
-    for i in range(epochs):
-        print("EPOCH: "+str(i)+"/"+str(epochs))
+    for i in range(1, epochs):
+        print("EPOCH: " + str(i) + "/" + str(epochs))
         generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                    len(vocabulary), num_photos_per_batch)
         model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1)
@@ -166,7 +164,8 @@ if mode == "train":
 
     ### PREDICT
 
-    predicted_caption = predict_caption(model, dataset_dir_path, "COCO_train2014_000000000025.jpg", max_cap_len,
+    # predicted_caption = predict_caption(model, dataset_dir_path, "COCO_train2014_000000000025.jpg", max_cap_len word_index_dict, index_word_dict)
+    predicted_caption = predict_caption(model, dataset_dir_path, "1067180831_a59dc64344.jpg", max_cap_len,
                                         word_index_dict, index_word_dict)
 
     print(predicted_caption)

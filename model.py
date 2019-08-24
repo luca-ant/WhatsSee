@@ -140,6 +140,9 @@ class FlickrDataset():
         from process_data import clean_captions
         train_captions = clean_captions(train_captions)
 
+        #num_training_examples = 10 # DEBUG
+        #train_captions = dict(list(train_captions.items())[:num_training_examples])
+
         return train_captions
 
     def load_images_name(self, images_id_list):
