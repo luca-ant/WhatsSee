@@ -113,7 +113,13 @@ if mode == "train":
 
     caption_file_path, dataset_dir_path = Dataset.download_dataset(dataset, data_path)
 
-    train_captions = Dataset.load_train_captions(dataset)
+    num_training_examples = 0  # ALL IMAGES
+
+    num_training_examples = 8000  # DEBUG
+
+    num_training_examples = 10  # DEBUG
+
+    train_captions = Dataset.load_train_captions(dataset, num_training_examples)
     train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
 
     train_captions_list = to_captions_list(train_captions)

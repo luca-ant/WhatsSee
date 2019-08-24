@@ -39,8 +39,8 @@ class Dataset:
         return dataset.load_captions()
 
     @staticmethod
-    def load_train_captions(dataset):
-        return dataset.load_train_captions()
+    def load_train_captions(dataset, num_training_examples):
+        return dataset.load_train_captions(num_training_examples)
 
     @staticmethod
     def load_images_name(dataset, images_id_list):
@@ -119,9 +119,9 @@ class FlickrDataset():
 
         return all_captions
 
-    def load_train_captions(self):
+    def load_train_captions(self, num_training_examples):
         train_captions = collections.defaultdict(list)
-        image_names=[]
+        image_names = []
         with open(os.path.dirname(self.caption_file_path) + "/Flickr_8k.trainImages.txt", 'r') as f:
             for line in f:
                 image_names.append(line.strip())
@@ -134,14 +134,19 @@ class FlickrDataset():
                 image_id, image_cap = tokens[0], tokens[1:]
                 image_id = image_id.split('.')[0]
                 image_cap = ' '.join(image_cap)
-                if(image_id+".jpg" in image_names):
+                if (image_id + ".jpg" in image_names):
                     train_captions[image_id].append(image_cap)
+
+        if num_training_examples != 0:
+            # Shuffle captions
+            l = list(train_captions.items())
+            random.shuffle(l)
+            train_captions = dict(l)
+            
+            train_captions = dict(list(train_captions.items())[:num_training_examples])
 
         from process_data import clean_captions
         train_captions = clean_captions(train_captions)
-
-        #num_training_examples = 10 # DEBUG
-        #train_captions = dict(list(train_captions.items())[:num_training_examples])
 
         return train_captions
 
@@ -220,20 +225,20 @@ class COCODataset():
 
         return all_captions
 
-    def load_train_captions(self):
+    def load_train_captions(self, num_training_examples):
 
         all_captions = self.load_captions()  # dict image_id - caption
 
-        # Shuffle captions
-        l = list(all_captions.items())
-        random.shuffle(l)
-        all_captions = dict(l)
+        if num_training_examples == 0:
+            train_captions = all_captions
 
-        num_training_examples = 8000  # DEBUG
+        else:
+            # Shuffle captions
+            l = list(all_captions.items())
+            random.shuffle(l)
+            all_captions = dict(l)
 
-        num_training_examples = 10  # DEBUG
-
-        train_captions = dict(list(all_captions.items())[:num_training_examples])
+            train_captions = dict(list(all_captions.items())[:num_training_examples])
 
         from process_data import clean_captions
         train_captions = clean_captions(train_captions)
