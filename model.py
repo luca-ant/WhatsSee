@@ -1,6 +1,8 @@
 import collections
 import json
 import os
+import random
+
 import tensorflow as tf
 
 from keras import Input, Model
@@ -27,6 +29,7 @@ def create_NN(vocab_size, max_cap_len):
 
 
 class Dataset:
+
     @staticmethod
     def download_dataset(dataset, data_path):
         return dataset.download_dataset(data_path)
@@ -36,12 +39,20 @@ class Dataset:
         return dataset.load_captions()
 
     @staticmethod
+    def load_train_captions(dataset):
+        return dataset.load_train_captions()
+
+    @staticmethod
     def load_images_name(dataset, images_id_list):
         return dataset.load_images_name(images_id_list)
 
     @staticmethod
     def get_image_name(dataset, image_id):
         return dataset.get_image_name(image_id)
+
+    @staticmethod
+    def load_all_images_name(dataset):
+        return dataset.load_all_images_name()
 
 
 class FlickrDataset():
@@ -50,7 +61,6 @@ class FlickrDataset():
 
     def __init__(self):
         super().__init__()
-
 
     def download_dataset(self, data_path):
         os.chdir(data_path)
@@ -89,8 +99,7 @@ class FlickrDataset():
 
         self.caption_file_path = os.path.abspath(caption_file_path)
         self.dataset_dir_path = os.path.abspath(dataset_dir_path)
-        return (os.path.abspath(caption_file_path), os.path.abspath(dataset_dir_path))
-
+        return os.path.abspath(caption_file_path), os.path.abspath(dataset_dir_path)
 
     def load_captions(self):
         all_captions = collections.defaultdict(list)
@@ -110,6 +119,28 @@ class FlickrDataset():
 
         return all_captions
 
+    def load_train_captions(self):
+        train_captions = collections.defaultdict(list)
+        image_names=[]
+        with open(os.path.dirname(self.caption_file_path) + "/Flickr_8k.trainImages.txt", 'r') as f:
+            for line in f:
+                image_names.append(line.strip())
+
+        with open(self.caption_file_path, 'r') as f:
+
+            for line in f:
+                tokens = line.split()
+                # take the first token as the image id, the rest as the description
+                image_id, image_cap = tokens[0], tokens[1:]
+                image_id = image_id.split('.')[0]
+                image_cap = ' '.join(image_cap)
+                if(image_id+".jpg" in image_names):
+                    train_captions[image_id].append(image_cap)
+
+        from process_data import clean_captions
+        train_captions = clean_captions(train_captions)
+
+        return train_captions
 
     def load_images_name(self, images_id_list):
         images_name_list = []
@@ -120,10 +151,12 @@ class FlickrDataset():
 
         return images_name_list
 
-
     def get_image_name(self, image_id):
         image_name = image_id + ".jpg"
         return image_name
+
+    def load_all_images_name(self):
+        return os.listdir(self.dataset_dir_path)
 
 
 class COCODataset():
@@ -184,6 +217,26 @@ class COCODataset():
 
         return all_captions
 
+    def load_train_captions(self):
+
+        all_captions = self.load_captions()  # dict image_id - caption
+
+        # Shuffle captions
+        l = list(all_captions.items())
+        random.shuffle(l)
+        all_captions = dict(l)
+
+        num_training_examples = 8000  # DEBUG
+
+        num_training_examples = 1  # DEBUG
+
+        train_captions = dict(list(all_captions.items())[:num_training_examples])
+
+        from process_data import clean_captions
+        train_captions = clean_captions(train_captions)
+
+        return train_captions
+
     def load_images_name(self, images_id_list):
         images_name_list = []
         for id in images_id_list:
@@ -196,3 +249,6 @@ class COCODataset():
     def get_image_name(self, image_id):
         image_name = "COCO_train2014_" + "%012d.jpg" % (image_id)
         return image_name
+
+    def load_all_images_name(self):
+        return os.listdir(self.dataset_dir_path)

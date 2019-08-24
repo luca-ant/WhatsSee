@@ -1,9 +1,5 @@
 import os
 import sys
-import json
-import random
-
-
 
 
 def usage():
@@ -12,7 +8,7 @@ def usage():
 
 
 def usage_train():
-    print("Usage: " + sys.argv[0] + " train dataset=[coco | flickr] num_examples=INT_NUMBER")
+    print("Usage: " + sys.argv[0] + " train dataset=[coco | flickr]")
     exit(2)
 
 
@@ -33,7 +29,7 @@ if len(sys.argv) < 2:
 mode = sys.argv[1]
 
 if mode == "train":
-    num_args = 2 + 2
+    num_args = 2 + 1
 
     if len(sys.argv) < num_args:
         usage_train()
@@ -49,14 +45,6 @@ if mode == "train":
                 print("Invalid value's option: " + val)
                 usage_train()
 
-        elif key=="num_examples":
-            try:
-                num_training_examples = int(val)
-                if num_training_examples > 8000:
-                    num_training_examples = 8000
-            except:
-                print("Invalid value's option: " + val)
-                usage_train()
         else:
             print("Invalid option: " + key)
             usage_train()
@@ -103,14 +91,9 @@ elif mode == "predict":
 
             usage_predict()
 
-
-
-
-from model import COCODataset, Dataset, create_NN, FlickrDataset
-from process_data import preprocess_images, clean_captions, \
-    generate_vocabulary, to_captions_list, add_start_end_token, load_all_images_name, prepare_data, predict_caption
-
-
+from model import COCODataset, FlickrDataset, Dataset, create_NN
+from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
+    predict_caption, store_vocabulary, load_vocabulary
 
 if dataset_name == "coco":
     dataset = COCODataset()
@@ -120,43 +103,28 @@ elif dataset_name == "flickr":
 current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 data_path = current_work_dir + "/data/"
+vocabolary_path = current_work_dir + "/vocabulary/"
+weight_path = current_work_dir + "/weight/"
 
 if not os.path.isdir(data_path):
     os.makedirs(data_path)
 
-
-
 if mode == "train":
-    print(mode)
+
     caption_file_path, dataset_dir_path = Dataset.download_dataset(dataset, data_path)
 
-
-    all_captions = Dataset.load_captions(dataset)  # dict image_id - caption
-
-    all_images_name_list = load_all_images_name(dataset_dir_path)
-
-    # Shuffle captions
-    l = list(all_captions.items())
-    random.shuffle(l)
-    all_captions = dict(l)
-
-    num_training_examples = 10 # DEBUG
-
-    train_captions = dict(list(all_captions.items())[:num_training_examples])
-
+    train_captions = Dataset.load_train_captions(dataset)
     train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
-
-
-    train_captions = clean_captions(train_captions)
 
     train_captions_list = to_captions_list(train_captions)
 
-    max_cap_len = max(len(d.split()) for d in train_captions_list)
-
     train_captions_list = add_start_end_token(train_captions_list)
+
+    max_cap_len = max(len(d.split()) for d in train_captions_list)
 
     vocabulary = generate_vocabulary(train_captions_list)
     print("VOCABULARY SIZE: " + str(len(vocabulary)))
+    print("MAX CAPTION LENGTH: " + str(max_cap_len))
     vocabulary.append("0")
 
     index_word_dict = {}
@@ -166,6 +134,8 @@ if mode == "train":
         word_index_dict[w] = i
         index_word_dict[i] = w
         i += 1
+
+    store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabolary_path)
 
     train_images_as_vector = preprocess_images(dataset_dir_path, train_images_name_list)
 
@@ -178,17 +148,20 @@ if mode == "train":
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
 
-    hist = model.fit([x_image, x_text], y_caption,
-                     epochs=3, verbose=2,
-                     batch_size=16)
+    history = model.fit([x_image, x_text], y_caption,
+                        epochs=3, verbose=2,
+                        batch_size=16)
 
-    print(hist)
+    if not os.path.isdir(weight_path):
+        os.makedirs(weight_path)
 
+    model.save_weights(weight_path+"weight.h5", True)
 
+    print(history)
 
     ### PREDICT
 
-    predicted_caption = predict_caption(model, dataset_dir_path, "1002674143_1b742ab4b8.jpg", max_cap_len,
+    predicted_caption = predict_caption(model, dataset_dir_path, "COCO_train2014_0000000000253.jpg", max_cap_len,
                                         word_index_dict, index_word_dict)
 
     print(predicted_caption)
@@ -200,7 +173,6 @@ elif mode == "eval":
 
     all_captions = Dataset.load_captions(dataset)  # dict image_id - caption
 
-    all_images_name_list = load_all_images_name(dataset_dir_path)
 
 
 
@@ -212,9 +184,5 @@ elif mode == "eval":
 
 elif mode == "predict":
     print(mode)
-
-
-
-
 
 exit(0)

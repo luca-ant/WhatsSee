@@ -7,6 +7,8 @@ import random
 import progressbar
 import numpy as np
 
+from model import Dataset
+
 from keras import models
 from keras.applications import VGG16
 from keras.applications.vgg16 import preprocess_input
@@ -14,7 +16,6 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
 from tensorflow.python.keras.preprocessing import image
-from model import Dataset
 
 
 def clean_captions(all_captions):
@@ -62,14 +63,49 @@ def add_start_end_token(all_captions_list):
 
 
 def generate_vocabulary(all_captions_list):
-    vocab = []
+    print("GENERATE VOCABULARY")
+
+    vocabulary = []
     for c in all_captions_list:
-        vocab = vocab + c.split()
-    return list(set(vocab))
+        vocabulary = vocabulary + c.split()
+
+    return list(set(vocabulary))
 
 
-def load_all_images_name(dataset_dir_path):
-    return os.listdir(dataset_dir_path)
+def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_path):
+    print("STORE VOCABULARY")
+
+    if not os.path.isdir(vocabulary_path):
+        os.makedirs(vocabulary_path)
+
+    with open(vocabulary_path + "vocabulary.json", 'w') as f:
+        #        f.write(json.dumps(vocabulary, default=lambda x: x.__dict__))
+        f.write(json.dumps(vocabulary))
+
+    with open(vocabulary_path + "word_index_dict.json", 'w') as f:
+        f.write(json.dumps(word_index_dict))
+
+    with open(vocabulary_path + "index_word_dict.json", 'w') as f:
+        f.write(json.dumps(index_word_dict))
+
+
+def load_vocabulary(vocabulary_path):
+    print("LOAD VOCABULARY")
+
+    if not os.path.isdir(vocabulary_path):
+        os.makedirs(vocabulary_path)
+        print("Vocabulary NOT FOUND")
+
+    with open(vocabulary_path + "vocabulary.json") as f:
+        vocabulary = json.load(f)
+
+    with open(vocabulary_path + "word_index_dict.json") as f:
+        word_index_dict = json.load(f)
+
+    with open(vocabulary_path + "index_word_dict.json") as f:
+        index_word_dict = json.load(f)
+
+    return vocabulary, word_index_dict, index_word_dict
 
 
 def preprocess_images(dataset_dir_path, train_images_name):
@@ -124,7 +160,7 @@ def prepare_data(dataset, train_captions, train_images_as_vector, word_index_dic
     x_image = np.array(x_image)
     y_caption = np.array(y_caption)
     print(" {} {} {}".format(x_text.shape, x_image.shape, y_caption.shape))
-    return (x_text, x_image, y_caption)
+    return x_text, x_image, y_caption
 
 
 def predict_caption(model, dataset_dir_path, image_name, max_cap_len, word_index_dict, index_word_dict):

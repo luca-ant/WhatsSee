@@ -3,7 +3,7 @@ import os
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-
+from PIL import Image
 
 from keras_applications.vgg16 import preprocess_input
 from tensorflow import keras
