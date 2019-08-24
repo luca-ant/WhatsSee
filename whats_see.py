@@ -8,7 +8,7 @@ def usage():
 
 
 def usage_train():
-    print("Usage: " + sys.argv[0] + " train dataset=[coco | flickr]")
+    print("Usage: " + sys.argv[0] + " train dataset=[coco | flickr] num_example=NUMBER")
     exit(2)
 
 
@@ -18,7 +18,7 @@ def usage_eval():
 
 
 def usage_predict():
-    print("Usage: " + sys.argv[0] + " predict filename=your_image_file")
+    print("Usage: " + sys.argv[0] + " predict filename=YOUR_IMAGE_FILE")
     exit(2)
 
 
@@ -29,7 +29,7 @@ if len(sys.argv) < 2:
 mode = sys.argv[1]
 
 if mode == "train":
-    num_args = 2 + 1
+    num_args = 2 + 2
 
     if len(sys.argv) < num_args:
         usage_train()
@@ -41,7 +41,16 @@ if mode == "train":
         if key == "dataset":
             if val == "coco" or val == "flickr":
                 dataset_name = val
+
             else:
+                print("Invalid value's option: " + val)
+                usage_train()
+
+        elif key == "num_example":
+            try:
+                num_training_examples = int(val)
+
+            except:
                 print("Invalid value's option: " + val)
                 usage_train()
 
@@ -112,10 +121,6 @@ if not os.path.isdir(data_path):
 if mode == "train":
 
     caption_file_path, dataset_dir_path = Dataset.download_dataset(dataset, data_path)
-
-    num_training_examples = 0  # ALL IMAGES
-
-    num_training_examples = 8000  # DEBUG
 
     num_training_examples = 10  # DEBUG
 
