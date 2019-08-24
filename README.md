@@ -13,9 +13,9 @@ git clone git@github.com:luca-ant/WhatsSee.git
 
 * Install dependencies
 ```
-sudo apt install python3.7-setuptools
-sudo apt install python3.7-pip
-sudo apt install python3.7-venv
+sudo apt install python3-setuptools
+sudo apt install python3-pip
+sudo apt install python3-venv
 ```
 or
 ```
@@ -27,10 +27,10 @@ sudo pacman -S python-virtualenv
 * Create a virtual environment and install requirements modules
 ```
 cd WhatsSee
-python3.7 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
-python3.7 -m pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 * Run the python script as:
