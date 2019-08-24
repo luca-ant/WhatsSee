@@ -113,7 +113,7 @@ current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 data_path = current_work_dir + "/data/"
 vocabolary_path = current_work_dir + "/vocabulary/"
-weight_path = current_work_dir + "/weight/"
+weight_path = current_work_dir + "/weights/"
 
 if not os.path.isdir(data_path):
     os.makedirs(data_path)
@@ -171,7 +171,7 @@ if mode == "train":
     if not os.path.isdir(weight_path):
         os.makedirs(weight_path)
 
-    model.save_weights(weight_path + "weight.h5", True)
+    model.save_weights(weight_path + "weights.h5", True)
 
     ### PREDICT
 
