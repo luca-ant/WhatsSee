@@ -1,5 +1,6 @@
 .idea/
 *.log
 __pycache__/
-venv
-data
+venv/
+data/
+predictions/
