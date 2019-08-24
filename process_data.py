@@ -163,6 +163,37 @@ def prepare_data(dataset, train_captions, train_images_as_vector, word_index_dic
     return x_text, x_image, y_caption
 
 
+def data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, vocab_size,
+                   num_photos_per_batch):
+    x_text, x_image, y_caption = list(), list(), list()
+    n = 0
+    while 1:
+
+        for image_id, cap_list in train_captions.items():
+            n += 1
+
+            image_name = Dataset.get_image_name(dataset, image_id)
+            image = train_images_as_vector[image_name]
+
+            for c in cap_list:
+                int_seq = [word_index_dict[word] for word in c.split(' ') if word in word_index_dict]
+
+                for i in range(1, len(int_seq)):
+                    in_text, out_text = int_seq[:i], int_seq[i]
+
+                    in_text = pad_sequences([in_text], maxlen=max_cap_len)[0]
+                    out_text = to_categorical(out_text, num_classes=vocab_size)
+
+                    x_text.append(in_text)
+                    y_caption.append(out_text)
+                    x_image.append(image)
+
+            if n == num_photos_per_batch:
+                yield [[np.array(x_image), np.array(x_text)], np.array(y_caption)]
+                x_text, x_image, y_caption = list(), list(), list()
+                n = 0
+
+
 def predict_caption(model, dataset_dir_path, image_name, max_cap_len, word_index_dict, index_word_dict):
     os.chdir(dataset_dir_path)
 

@@ -93,7 +93,7 @@ elif mode == "predict":
 
 from model import COCODataset, FlickrDataset, Dataset, create_NN
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
-    predict_caption, store_vocabulary, load_vocabulary
+    predict_caption, store_vocabulary, load_vocabulary, data_generator
 
 if dataset_name == "coco":
     dataset = COCODataset()
@@ -148,20 +148,25 @@ if mode == "train":
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
 
-    history = model.fit([x_image, x_text], y_caption,
-                        epochs=3, verbose=2,
-                        batch_size=16)
+    #  history = model.fit([x_image, x_text], y_caption, epochs=3, verbose=1,batch_size=16)
+
+    epochs = 10
+    num_photos_per_batch = 16
+    steps = len(train_captions)
+    for i in range(epochs):
+        print("EPOCH: "+str(i)+"/"+str(epochs))
+        generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
+                                   len(vocabulary), num_photos_per_batch)
+        model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1)
 
     if not os.path.isdir(weight_path):
         os.makedirs(weight_path)
 
-    model.save_weights(weight_path+"weight.h5", True)
-
-    print(history)
+    model.save_weights(weight_path + "weight.h5", True)
 
     ### PREDICT
 
-    predicted_caption = predict_caption(model, dataset_dir_path, "COCO_train2014_0000000000253.jpg", max_cap_len,
+    predicted_caption = predict_caption(model, dataset_dir_path, "COCO_train2014_000000000025.jpg", max_cap_len,
                                         word_index_dict, index_word_dict)
 
     print(predicted_caption)

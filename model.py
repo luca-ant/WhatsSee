@@ -228,7 +228,7 @@ class COCODataset():
 
         num_training_examples = 8000  # DEBUG
 
-        num_training_examples = 1  # DEBUG
+        num_training_examples = 10  # DEBUG
 
         train_captions = dict(list(all_captions.items())[:num_training_examples])
 
