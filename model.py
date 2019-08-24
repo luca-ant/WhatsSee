@@ -82,17 +82,17 @@ class FlickrDataset():
 
         name_of_zip = 'Flickr8k_Dataset.zip'
 
-        if not os.path.exists(os.path.abspath('.') + '/Flickr8k_Dataset/Flicker8k_Dataset/'):
+        if not os.path.exists(os.path.abspath('.') + '/Flickr8k_Dataset/'):
 
             image_zip = tf.keras.utils.get_file(name_of_zip,
                                                 cache_subdir=os.path.abspath("."),
                                                 origin='https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip',
                                                 extract=True)
-            dataset_dir_path = os.path.dirname(image_zip) + '/Flickr8k_Dataset/Flicker8k_Dataset/'
+            dataset_dir_path = os.path.dirname(image_zip) + '/Flickr8k_Dataset/'
 
 
         else:
-            dataset_dir_path = os.path.abspath('.') + '/Flickr8k_Dataset/Flicker8k_Dataset/'
+            dataset_dir_path = os.path.abspath('.') + '/Flickr8k_Dataset/'
             print("Images dataset already exists")
 
         os.chdir("..")
