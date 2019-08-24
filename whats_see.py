@@ -162,7 +162,7 @@ if mode == "train":
     epochs = 10
     num_photos_per_batch = 16
     steps = len(train_captions)
-    for i in range(1, epochs):
+    for i in range(1, epochs+1):
         print("EPOCH: " + str(i) + "/" + str(epochs))
         generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                    len(vocabulary), num_photos_per_batch)
