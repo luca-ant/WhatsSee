@@ -33,7 +33,6 @@ def train(dataset, num_training_examples):
 
     train_captions = Dataset.load_train_captions(dataset, num_training_examples)
     train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
-
     train_captions_list = to_captions_list(train_captions)
 
     train_captions_list = add_start_end_token(train_captions_list)

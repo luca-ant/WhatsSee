@@ -130,7 +130,6 @@ def preprocess_images(images_dir_path, train_images_name):
     with progressbar.ProgressBar(max_value=len(train_images_name)) as bar:
         for i, image_name in enumerate(train_images_name):
             img = image.load_img(images_dir_path + image_name, target_size=(224, 224, 3))
-
             img = image.img_to_array(img)
 
             img = preprocess_input(img)
@@ -179,6 +178,7 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
             n += 1
 
             image_name = Dataset.get_image_name(dataset, image_id)
+
             image = train_images_as_vector[image_name]
 
             for c in cap_list:

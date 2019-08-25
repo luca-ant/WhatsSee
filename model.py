@@ -138,7 +138,6 @@ class FlickrDataset():
 
         from process_data import clean_captions
         train_captions = clean_captions(train_captions)
-
         return train_captions
 
     def load_images_name(self, images_id_list):
@@ -163,7 +162,7 @@ class COCODataset():
     def __init__(self, data_path):
         self.subdir = data_path + "coco_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
-        self.images_dir_path = self.subdir + "images/"
+        self.images_dir_path = self.subdir + "images/train2014/"
         self.captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
 
     def download_dataset(self):
@@ -205,12 +204,12 @@ class COCODataset():
 
             os.remove(images_zip)
 
-            images_dir_path = self.images_dir_path + 'train2014/'
+            images_dir_path = self.images_dir_path
 
 
 
         else:
-            images_dir_path = self.images_dir_path + 'train2014/'
+            images_dir_path = self.images_dir_path
             print("Images dataset already exists")
 
         return captions_file_path, images_dir_path
@@ -224,7 +223,6 @@ class COCODataset():
             caption_string = c['caption']
             image_id = c['image_id']
             all_captions[image_id].append(caption_string)
-
         return all_captions
 
     def load_train_captions(self, num_training_examples):
@@ -253,7 +251,6 @@ class COCODataset():
             image_name = 'COCO_train2014_' + '%012d.jpg' % (id)
             if os.path.isfile(self.images_dir_path + "/" + image_name):
                 images_name_list.append(image_name)
-
         return images_name_list
 
     def get_image_name(self, image_id):
