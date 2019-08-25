@@ -72,7 +72,7 @@ def generate_vocabulary(all_captions_list):
     return list(set(vocabulary))
 
 
-def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_path):
+def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_path, max_cap_len):
     print("STORE VOCABULARY")
 
     if not os.path.isdir(vocabulary_path):
@@ -87,6 +87,10 @@ def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_pa
 
     with open(vocabulary_path + "index_word_dict.json", 'w') as f:
         f.write(json.dumps(index_word_dict))
+
+    with open(vocabulary_path + "max_cap_len.json", 'w') as f:
+        #        f.write(json.dumps(max_cap_len, default=lambda x: x.__dict__))
+        f.write(json.dumps(max_cap_len))
 
 
 def load_vocabulary(vocabulary_path):
@@ -105,7 +109,10 @@ def load_vocabulary(vocabulary_path):
     with open(vocabulary_path + "index_word_dict.json") as f:
         index_word_dict = json.load(f)
 
-    return vocabulary, word_index_dict, index_word_dict
+    with open(vocabulary_path + "max_cap_len.json") as f:
+        max_cap_len = json.load(f)
+
+    return vocabulary, word_index_dict, index_word_dict, max_cap_len
 
 
 def preprocess_images(dataset_dir_path, train_images_name):
@@ -194,9 +201,7 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
                 n = 0
 
 
-def predict_caption(model, dataset_dir_path, image_name, max_cap_len, word_index_dict, index_word_dict):
-    os.chdir(dataset_dir_path)
-
+def predict_caption(model, image_name, max_cap_len, word_index_dict, index_word_dict):
     # modelvgg = VGG16(include_top=True, weights=None)
     modelvgg = VGG16(include_top=True)
     #       modelvgg.load_weights("../input/vgg16-weights-image-captioning/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
@@ -224,6 +229,5 @@ def predict_caption(model, dataset_dir_path, image_name, max_cap_len, word_index
     caption = in_text.split()
     caption = caption[1:-1]
     caption = ' '.join(caption)
-    os.chdir("..")
 
     return caption
