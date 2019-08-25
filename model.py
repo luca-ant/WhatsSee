@@ -76,7 +76,7 @@ class FlickrDataset():
 
         if not os.path.exists(self.caption_dir_path) or not os.path.exists(self.images_dir_path):
             print("DOWNLOADING FLICKR DATASET")
-            os.removedirs(self.subdir)
+            os.rmdir(self.subdir,)
             os.system("git clone --progress -v https://github.com/luca-ant/WhatsSee_dataset.git " + self.subdir)
             # Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.data_path, progress=Progress())
 
