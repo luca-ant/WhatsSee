@@ -12,7 +12,6 @@ from keras import Input, Model
 from keras.layers import Dropout, Dense, LSTM, Embedding, add
 
 
-
 def create_NN(vocab_size, max_cap_len):
     input_image = Input(shape=(4096,))
     fe1 = Dropout(0.5)(input_image)
@@ -34,9 +33,8 @@ def create_NN(vocab_size, max_cap_len):
 
 class Progress(RemoteProgress):
     def update(self, op_code, cur_count, max_count=None, message=''):
-
         if op_code == 32:
-            print('Downloaded %d of %d, %s'%( cur_count, max_count, message))
+            print('Downloaded %d of %d, %s' % (cur_count, max_count, message))
 
 
 class Dataset:
@@ -69,7 +67,7 @@ class Dataset:
 class FlickrDataset():
 
     def __init__(self, data_path):
-        self.data_path=data_path
+        self.data_path = data_path
         self.subdir = data_path + "flickr_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/"
@@ -213,7 +211,7 @@ class COCODataset():
             print("Images dataset already exists")
 
         self.captions_file_path = captions_file_path
-        self.images_dir_path = images_dir_path +''
+        self.images_dir_path = images_dir_path + ''
 
         return captions_file_path, images_dir_path
 
