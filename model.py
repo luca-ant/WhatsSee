@@ -176,7 +176,7 @@ class COCODataset():
             print("DOWNLOADING CAPTIONS FROM COCO DATASET")
             captions_zip = wget.download(url, self.subdir + name_of_zip)
 
-            print("EXTRACTING ZIP CAPIOTN FILE INTO " + self.caption_dir_path)
+            print("\nEXTRACTING ZIP CAPIOTN FILE INTO " + self.caption_dir_path)
 
             with zipfile.ZipFile(captions_zip, 'r') as zip:
                 zip.extractall(self.caption_dir_path)
@@ -198,7 +198,7 @@ class COCODataset():
             print("DOWNLOADING IMAGES FROM COCO DATASET")
             images_zip = wget.download(url, self.subdir + name_of_zip)
 
-            print("EXTRACTING ZIP IMAGES FILE INTO " + self.images_dir_path)
+            print("\nEXTRACTING ZIP IMAGES FILE INTO " + self.images_dir_path)
 
             with zipfile.ZipFile(images_zip, 'r') as zip:
                 zip.extractall(self.images_dir_path)
