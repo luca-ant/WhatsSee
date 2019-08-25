@@ -1,11 +1,14 @@
 import os
 import sys
 
+from keras.callbacks import ModelCheckpoint
+
 current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 data_path = current_work_dir + "/data/"
 vocabulary_path = current_work_dir + "/vocabulary/"
 weight_path = current_work_dir + "/weights/"
+checkpoints_path = current_work_dir + "/checkpoints/"
 
 
 def usage():
@@ -65,14 +68,22 @@ def train(dataset, num_training_examples):
 
     # history = model.fit([x_image, x_text], y_caption, epochs=3, verbose=1,batch_size=16)
 
-    epochs = 10
-    num_photos_per_batch = 32
+    if os.path.isdir(checkpoints_path):
+        os.system("rm -rf " + checkpoints_path)
+    os.mkdir(checkpoints_path)
+
+    # checkpoints_callback = ModelCheckpoint(checkpoints_path + "model-{epoch:03d}-{acc:03f}.h5", monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', save_best_only=True, period=5)
+
+    checkpoints_callback = ModelCheckpoint(checkpoints_path + "last_model_checkpoint.h5", monitor='val_acc',
+                                           save_weights_only=True, verbose=1, mode='auto', period=5)
+
+    num_images_per_batch = 32
     steps = len(train_captions)
-    for i in range(1, epochs + 1):
-        print("EPOCH: " + str(i) + "/" + str(epochs))
-        generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
-                                   len(vocabulary), num_photos_per_batch)
-        model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1)
+
+    generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
+                               len(vocabulary), num_images_per_batch)
+
+    model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
 
     if not os.path.isdir(weight_path):
         os.makedirs(weight_path)
@@ -90,6 +101,20 @@ def eval():
 
     model.load_weights(weight_path + "weights.h5")
 
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    model.summary()
+
+    """
+    epochs = 50
+    num_images_per_batch = 32
+    
+    steps = len(eval_captions)
+
+    generator = data_generator(dataset, eval_captions, eval_images_as_vector, word_index_dict, max_cap_len,
+                               len(vocabulary), num_images_per_batch)
+    model.evaluate_generator(generator, steps=steps, callbacks=None, max_queue_size=10, workers=1, use_multiprocessing=False, verbose=1)
+    """
+
 
 def predict(image_name):
     vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_path)
@@ -100,6 +125,9 @@ def predict(image_name):
     model = create_NN(len(vocabulary), max_cap_len)
 
     model.load_weights(weight_path + "weights.h5")
+
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    model.summary()
 
     ### PREDICT
 
@@ -197,8 +225,6 @@ from model import COCODataset, FlickrDataset, Dataset, create_NN
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
     predict_caption, store_vocabulary, load_vocabulary, data_generator
 
-
-
 if not os.path.isdir(data_path):
     os.makedirs(data_path)
 
@@ -206,8 +232,6 @@ if dataset_name == "coco":
     dataset = COCODataset(data_path)
 elif dataset_name == "flickr":
     dataset = FlickrDataset(data_path)
-
-
 
 if mode == "train":
 

@@ -6,7 +6,6 @@ import wget
 import zipfile
 
 from git import Repo, RemoteProgress
-import tensorflow as tf
 
 from keras import Input, Model
 from keras.layers import Dropout, Dense, LSTM, Embedding, add

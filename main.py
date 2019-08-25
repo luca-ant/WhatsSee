@@ -52,7 +52,7 @@ for image_path in train_images_name:
 
     cp_callback = tf.keras.callbacks.ModelCheckpoint(
         checkpoint_path, verbose=1, save_weights_only=True,
-        period=5)
+        period=100)
 
     """
     model.fit(train_images, train_labels, epochs=20, callbacks = [cp_callback])

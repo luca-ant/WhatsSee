@@ -2,7 +2,6 @@ import os
 import json
 import collections
 import string
-import random
 
 import progressbar
 import numpy as np
