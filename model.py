@@ -69,7 +69,7 @@ class Dataset:
 class FlickrDataset():
 
     def __init__(self, data_path):
-
+        self.data_path=data_path
         self.subdir = data_path + "flickr_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/"
@@ -80,11 +80,13 @@ class FlickrDataset():
             os.makedirs(self.subdir, exist_ok=True)
             print("DOWNLOADING FLICKR DATASET")
 
-            Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
+            Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.data_path, progress=Progress())
 
         else:
             print("Captions already exists")
             print("Images dataset already exists")
+
+        self.captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
 
         captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
         images_dir_path = self.images_dir_path + ''
@@ -211,8 +213,9 @@ class COCODataset():
             images_dir_path = self.images_dir_path + 'train2014/'
             print("Images dataset already exists")
 
-        self.captions_file_path = os.path.abspath(captions_file_path)
-        self.images_dir_path = os.path.abspath(images_dir_path)
+        self.captions_file_path = captions_file_path
+        self.images_dir_path = images_dir_path +''
+
         return captions_file_path, images_dir_path
 
     def load_captions(self):
