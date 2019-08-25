@@ -99,6 +99,7 @@ def load_vocabulary(vocabulary_path):
     if not os.path.isdir(vocabulary_path):
         os.makedirs(vocabulary_path)
         print("Vocabulary NOT FOUND")
+        return
 
     with open(vocabulary_path + "vocabulary.json") as f:
         vocabulary = json.load(f)
@@ -107,7 +108,7 @@ def load_vocabulary(vocabulary_path):
         word_index_dict = json.load(f)
 
     with open(vocabulary_path + "index_word_dict.json") as f:
-        index_word_dict = json.load(f)
+        index_word_dict = json.load(f, object_hook=lambda d: {int(k) if k.isdigit() else k: v for k, v in d.items()})
 
     with open(vocabulary_path + "max_cap_len.json") as f:
         max_cap_len = json.load(f)
@@ -115,9 +116,7 @@ def load_vocabulary(vocabulary_path):
     return vocabulary, word_index_dict, index_word_dict, max_cap_len
 
 
-def preprocess_images(dataset_dir_path, train_images_name):
-    os.chdir(dataset_dir_path)
-
+def preprocess_images(images_dir_path, train_images_name):
     images_as_vector = collections.defaultdict()
 
     #   modelvgg = VGG16(include_top=True, weights=None)
@@ -130,7 +129,7 @@ def preprocess_images(dataset_dir_path, train_images_name):
 
     with progressbar.ProgressBar(max_value=len(train_images_name)) as bar:
         for i, image_name in enumerate(train_images_name):
-            img = image.load_img(image_name, target_size=(224, 224, 3))
+            img = image.load_img(images_dir_path + image_name, target_size=(224, 224, 3))
 
             img = image.img_to_array(img)
 

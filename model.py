@@ -2,11 +2,15 @@ import collections
 import json
 import os
 import random
+import wget
+import zipfile
 
+from git import Repo, RemoteProgress
 import tensorflow as tf
 
 from keras import Input, Model
 from keras.layers import Dropout, Dense, LSTM, Embedding, add
+
 
 
 def create_NN(vocab_size, max_cap_len):
@@ -28,11 +32,18 @@ def create_NN(vocab_size, max_cap_len):
     return model
 
 
+class Progress(RemoteProgress):
+    def update(self, op_code, cur_count, max_count=None, message=''):
+
+        if op_code == 32:
+            print('Downloaded %d of %d, %s'%( cur_count, max_count, message))
+
+
 class Dataset:
 
     @staticmethod
-    def download_dataset(dataset, data_path):
-        return dataset.download_dataset(data_path)
+    def download_dataset(dataset):
+        return dataset.download_dataset()
 
     @staticmethod
     def load_captions(dataset):
@@ -56,55 +67,34 @@ class Dataset:
 
 
 class FlickrDataset():
-    caption_file_path = ""
-    dataset_dir_path = ""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data_path):
 
-    def download_dataset(self, data_path):
-        os.chdir(data_path)
+        self.subdir = data_path + "flickr_dataset/"
+        self.caption_dir_path = self.subdir + "captions/"
+        self.images_dir_path = self.subdir + "images/"
 
-        name_of_zip = 'Flickr8k_text.zip'
+    def download_dataset(self):
 
-        if not os.path.exists(os.path.abspath('.') + '/'):
+        if not os.path.exists(self.subdir):
+            os.makedirs(self.subdir, exist_ok=True)
+            print("DOWNLOADING FLICKR DATASET")
 
-            caption_zip = tf.keras.utils.get_file(name_of_zip,
-                                                  cache_subdir=os.path.abspath('.'),
-                                                  origin='https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip',
-                                                  extract=True)
-            caption_file_path = os.path.dirname(caption_zip) + '/Flickr8k.token.txt'
-
+            Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
 
         else:
-            caption_file_path = os.path.abspath('.') + '/Flickr8k.token.txt'
             print("Captions already exists")
-
-        name_of_zip = 'Flickr8k_Dataset.zip'
-
-        if not os.path.exists(os.path.abspath('.') + '/Flickr8k_Dataset/'):
-
-            image_zip = tf.keras.utils.get_file(name_of_zip,
-                                                cache_subdir=os.path.abspath("."),
-                                                origin='https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip',
-                                                extract=True)
-            dataset_dir_path = os.path.dirname(image_zip) + '/Flickr8k_Dataset/'
-
-
-        else:
-            dataset_dir_path = os.path.abspath('.') + '/Flickr8k_Dataset/'
             print("Images dataset already exists")
 
-        os.chdir("..")
+        captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
+        images_dir_path = self.images_dir_path + ''
 
-        self.caption_file_path = os.path.abspath(caption_file_path)
-        self.dataset_dir_path = os.path.abspath(dataset_dir_path)
-        return os.path.abspath(caption_file_path), os.path.abspath(dataset_dir_path)
+        return captions_file_path, images_dir_path
 
     def load_captions(self):
         all_captions = collections.defaultdict(list)
 
-        with open(self.caption_file_path, 'r') as f:
+        with open(self.captions_file_path, 'r') as f:
 
             for line in f:
                 tokens = line.split()
@@ -122,11 +112,11 @@ class FlickrDataset():
     def load_train_captions(self, num_training_examples):
         train_captions = collections.defaultdict(list)
         image_names = []
-        with open(os.path.dirname(self.caption_file_path) + "/Flickr_8k.trainImages.txt", 'r') as f:
+        with open(os.path.dirname(self.captions_file_path) + "/Flickr_8k.trainImages.txt", 'r') as f:
             for line in f:
                 image_names.append(line.strip())
 
-        with open(self.caption_file_path, 'r') as f:
+        with open(self.captions_file_path, 'r') as f:
 
             for line in f:
                 tokens = line.split()
@@ -142,7 +132,7 @@ class FlickrDataset():
             l = list(train_captions.items())
             random.shuffle(l)
             train_captions = dict(l)
-            
+
             train_captions = dict(list(train_captions.items())[:num_training_examples])
 
         from process_data import clean_captions
@@ -154,7 +144,7 @@ class FlickrDataset():
         images_name_list = []
         for id in images_id_list:
             image_name = id + '.jpg'
-            if os.path.isfile(self.dataset_dir_path + "/" + image_name):
+            if os.path.isfile(self.images_dir_path + "/" + image_name):
                 images_name_list.append(image_name)
 
         return images_name_list
@@ -164,58 +154,70 @@ class FlickrDataset():
         return image_name
 
     def load_all_images_name(self):
-        return os.listdir(self.dataset_dir_path)
+        return os.listdir(self.images_dir_path)
 
 
 class COCODataset():
-    caption_file_path = ""
-    dataset_dir_path = ""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data_path):
+        self.subdir = data_path + "coco_dataset/"
+        self.caption_dir_path = self.subdir + "captions/"
+        self.images_dir_path = self.subdir + "images/"
 
-    def download_dataset(self, data_path):
-
-        os.chdir(data_path)
+    def download_dataset(self):
 
         name_of_zip = 'captions.zip'
+        if not os.path.exists(self.caption_dir_path):
+            os.makedirs(self.caption_dir_path, exist_ok=True)
 
-        if not os.path.exists(os.path.abspath('.') + '/' + name_of_zip):
+            url = 'http://images.cocodataset.org/annotations/annotations_trainval2014.zip'
+            print("DOWNLOADING CAPTIONS FROM COCO DATASET")
+            captions_zip = wget.download(url, self.subdir + name_of_zip)
 
-            caption_zip = tf.keras.utils.get_file(name_of_zip,
-                                                  cache_subdir=os.path.abspath('.'),
-                                                  origin='http://images.cocodataset.org/annotations/annotations_trainval2014.zip',
-                                                  extract=True)
-            caption_file_path = os.path.dirname(caption_zip) + '/annotations/captions_train2014.json'
+            print("EXTRACTING ZIP CAPIOTN FILE INTO " + self.caption_dir_path)
+
+            with zipfile.ZipFile(captions_zip, 'r') as zip:
+                zip.extractall(self.caption_dir_path)
+
+            os.remove(captions_zip)
+            captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
 
         else:
-            caption_file_path = os.path.abspath('.') + '/annotations/captions_train2014.json'
+            captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
             print("Captions already exists")
 
         name_of_zip = 'train2014.zip'
 
-        if not os.path.exists(os.path.abspath('.') + '/' + name_of_zip):
+        if not os.path.exists(self.images_dir_path):
 
-            image_zip = tf.keras.utils.get_file(name_of_zip,
-                                                cache_subdir=os.path.abspath("."),
-                                                origin='http://images.cocodataset.org/zips/train2014.zip',
-                                                extract=True)
-            dataset_dir_path = os.path.dirname(image_zip) + '/train2014/'
+            os.makedirs(self.images_dir_path, exist_ok=True)
+
+            url = 'http://images.cocodataset.org/zips/train2014.zip'
+            print("DOWNLOADING IMAGES FROM COCO DATASET")
+            images_zip = wget.download(url, self.subdir + name_of_zip)
+
+            print("EXTRACTING ZIP IMAGES FILE INTO " + self.images_dir_path)
+
+            with zipfile.ZipFile(images_zip, 'r') as zip:
+                zip.extractall(self.images_dir_path)
+
+            os.remove(images_zip)
+
+            images_dir_path = self.images_dir_path + 'train2014/'
+
 
 
         else:
-            dataset_dir_path = os.path.abspath('.') + '/train2014/'
+            images_dir_path = self.images_dir_path + 'train2014/'
             print("Images dataset already exists")
 
-        os.chdir("..")
-
-        self.caption_file_path = os.path.abspath(caption_file_path)
-        self.dataset_dir_path = os.path.abspath(dataset_dir_path)
-        return (os.path.abspath(caption_file_path), os.path.abspath(dataset_dir_path))
+        self.captions_file_path = os.path.abspath(captions_file_path)
+        self.images_dir_path = os.path.abspath(images_dir_path)
+        return captions_file_path, images_dir_path
 
     def load_captions(self):
         all_captions = collections.defaultdict(list)
-        with open(self.caption_file_path, 'r') as f:
+        with open(self.captions_file_path, 'r') as f:
             captions = json.load(f)
 
         for c in captions['annotations']:
@@ -249,7 +251,7 @@ class COCODataset():
         images_name_list = []
         for id in images_id_list:
             image_name = 'COCO_train2014_' + '%012d.jpg' % (id)
-            if os.path.isfile(self.dataset_dir_path + "/" + image_name):
+            if os.path.isfile(self.images_dir_path + "/" + image_name):
                 images_name_list.append(image_name)
 
         return images_name_list
@@ -259,4 +261,4 @@ class COCODataset():
         return image_name
 
     def load_all_images_name(self):
-        return os.listdir(self.dataset_dir_path)
+        return os.listdir(self.images_dir_path)

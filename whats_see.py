@@ -29,7 +29,7 @@ def usage_predict():
 
 
 def train(dataset, num_training_examples):
-    caption_file_path, dataset_dir_path = Dataset.download_dataset(dataset, data_path)
+    captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
     train_captions = Dataset.load_train_captions(dataset, num_training_examples)
     train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
@@ -55,7 +55,7 @@ def train(dataset, num_training_examples):
 
     store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_path, max_cap_len)
 
-    train_images_as_vector = preprocess_images(dataset_dir_path, train_images_name_list)
+    train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
 
     model = create_NN(len(vocabulary), max_cap_len)
 
@@ -84,6 +84,9 @@ def train(dataset, num_training_examples):
 def eval():
     vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_path)
 
+    print("VOCABULARY SIZE: " + str(len(vocabulary)))
+    print("MAX CAPTION LENGTH: " + str(max_cap_len))
+
     model = create_NN(len(vocabulary), max_cap_len)
 
     model.load_weights(weight_path + "weights.h5")
@@ -91,6 +94,9 @@ def eval():
 
 def predict(image_name):
     vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_path)
+
+    print("VOCABULARY SIZE: " + str(len(vocabulary)))
+    print("MAX CAPTION LENGTH: " + str(max_cap_len))
 
     model = create_NN(len(vocabulary), max_cap_len)
 
@@ -112,9 +118,9 @@ if len(sys.argv) < 2:
 
 mode = sys.argv[1]
 
-dataset_name =""
-num_training_examples=1
-image_file_name=""
+dataset_name = ""
+num_training_examples = 1
+image_file_name = ""
 
 if mode == "train":
     num_args = 2 + 2
@@ -194,13 +200,15 @@ from process_data import preprocess_images, generate_vocabulary, to_captions_lis
 
 
 
-if dataset_name == "coco":
-    dataset = COCODataset()
-elif dataset_name == "flickr":
-    dataset = FlickrDataset()
-
 if not os.path.isdir(data_path):
     os.makedirs(data_path)
+
+if dataset_name == "coco":
+    dataset = COCODataset(data_path)
+elif dataset_name == "flickr":
+    dataset = FlickrDataset(data_path)
+
+
 
 if mode == "train":
 
@@ -211,9 +219,7 @@ if mode == "train":
 
 
 elif mode == "eval":
-    caption_file_path, dataset_dir_path = Dataset.download_dataset(dataset, data_path)
-
-    all_captions = Dataset.load_captions(dataset)  # dict image_id - caption
+    eval()
 
 
 
@@ -225,8 +231,8 @@ elif mode == "eval":
 
 
 elif mode == "predict":
-#    image_file_name = "COCO_train2014_000000000025.jpg"  # DEBUG
-#    image_file_name = "1067180831_a59dc64344.jpg"  # DEBUG
+    #    image_file_name = "COCO_train2014_000000000025.jpg"  # DEBUG
+    #    image_file_name = "1067180831_a59dc64344.jpg"  # DEBUG
     predicted_caption = predict(image_file_name)
 
 exit(0)
