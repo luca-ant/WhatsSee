@@ -80,8 +80,8 @@ class FlickrDataset():
                 os.rmdir(self.subdir)
             except:
                 pass
-            #os.system("git clone --progress -v https://github.com/luca-ant/WhatsSee_dataset.git " + self.subdir)
-            Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
+            os.system("git clone --progress -v https://github.com/luca-ant/WhatsSee_dataset.git " + self.subdir)
+            #Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
 
         else:
             print("Captions already exists")
