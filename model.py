@@ -70,19 +70,19 @@ class FlickrDataset():
         self.subdir = data_path + "flickr_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/"
+        self.captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
 
     def download_dataset(self):
 
-        if not os.path.exists(self.subdir):
+        if not os.path.exists(self.caption_dir_path) or not os.path.exists(self.images_dir_path):
             print("DOWNLOADING FLICKR DATASET")
+            os.removedirs(self.subdir)
             os.system("git clone --progress -v https://github.com/luca-ant/WhatsSee_dataset.git " + self.subdir)
             # Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.data_path, progress=Progress())
 
         else:
             print("Captions already exists")
             print("Images dataset already exists")
-
-        self.captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
 
         captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
         images_dir_path = self.images_dir_path + ''
@@ -161,6 +161,7 @@ class COCODataset():
         self.subdir = data_path + "coco_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/"
+        self.captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
 
     def download_dataset(self):
 
@@ -208,9 +209,6 @@ class COCODataset():
         else:
             images_dir_path = self.images_dir_path + 'train2014/'
             print("Images dataset already exists")
-
-        self.captions_file_path = captions_file_path
-        self.images_dir_path = images_dir_path + ''
 
         return captions_file_path, images_dir_path
 
