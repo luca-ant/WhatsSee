@@ -77,7 +77,6 @@ class FlickrDataset():
     def download_dataset(self):
 
         if not os.path.exists(self.subdir):
-            os.makedirs(self.subdir, exist_ok=True)
             print("DOWNLOADING FLICKR DATASET")
 
             Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.data_path, progress=Progress())
