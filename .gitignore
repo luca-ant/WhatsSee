@@ -3,6 +3,7 @@
 *.pyc
 __pycache__/
 venv/
-data/
+data/coco_dataset/
+data/flickr_dataset/
+data/checkpoints/
 predictions/
-checkpoints/
