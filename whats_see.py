@@ -1,7 +1,13 @@
 import os
 import sys
-
+import logging
+import tensorflow as tf
+from model import COCODataset, FlickrDataset, Dataset, create_NN
+from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
+    predict_caption, store_vocabulary, load_vocabulary, data_generator, clean_captions
 from keras.callbacks import ModelCheckpoint
+
+tf.get_logger().setLevel(logging.ERROR)
 
 current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
@@ -22,7 +28,7 @@ def usage_train():
 
 
 def usage_eval():
-    print("Usage: " + sys.argv[0] + " eval dataset=[coco | flickr]")
+    print("Usage: " + sys.argv[0] + " eval dataset=[coco | flickr] num_example=NUMBER")
     exit(2)
 
 
@@ -35,10 +41,10 @@ def train(dataset, num_training_examples):
     captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
     train_captions = Dataset.load_train_captions(dataset, num_training_examples)
+    train_captions = clean_captions(train_captions)
     train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
+    train_captions = add_start_end_token(train_captions)
     train_captions_list = to_captions_list(train_captions)
-
-    train_captions_list = add_start_end_token(train_captions_list)
 
     max_cap_len = max(len(d.split()) for d in train_captions_list)
 
@@ -75,7 +81,7 @@ def train(dataset, num_training_examples):
     # checkpoints_callback = ModelCheckpoint(checkpoints_path + "model-{epoch:03d}-{acc:03f}.h5", monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', save_best_only=True, period=5)
 
     checkpoints_callback = ModelCheckpoint(checkpoints_path + "last_model_checkpoint.h5", monitor='val_acc',
-                                           save_weights_only=True, verbose=1, mode='auto', period=5)
+                                           save_weights_only=True, verbose=1, mode='auto', period=1)
 
     num_images_per_batch = 32
     steps = len(train_captions)
@@ -83,7 +89,7 @@ def train(dataset, num_training_examples):
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)
 
-    model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
+    model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
 
     if not os.path.isdir(weight_path):
         os.makedirs(weight_path)
@@ -92,28 +98,38 @@ def train(dataset, num_training_examples):
 
 
 def eval():
+    captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
+
+    eval_captions = Dataset.load_eval_captions(dataset, num_training_examples)
+    eval_captions = clean_captions(eval_captions)
+    eval_images_name_list = Dataset.load_images_name(dataset, eval_captions.keys())
+
+    eval_captions = add_start_end_token(eval_captions)
+
     vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_path)
 
     print("VOCABULARY SIZE: " + str(len(vocabulary)))
     print("MAX CAPTION LENGTH: " + str(max_cap_len))
 
+    eval_images_as_vector = preprocess_images(images_dir_path, eval_images_name_list)
+
     model = create_NN(len(vocabulary), max_cap_len)
 
     model.load_weights(weight_path + "weights.h5")
+    #    model.load_weights(checkpoints_path + "last_model_checkpoint.h5")
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
 
-    """
-    epochs = 50
     num_images_per_batch = 32
-    
     steps = len(eval_captions)
 
     generator = data_generator(dataset, eval_captions, eval_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)
-    model.evaluate_generator(generator, steps=steps, callbacks=None, max_queue_size=10, workers=1, use_multiprocessing=False, verbose=1)
-    """
+    loss, acc = model.evaluate_generator(generator, steps=steps, max_queue_size=10, workers=1,
+                                         use_multiprocessing=False, verbose=1)
+
+    print("LOSS: " + str(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
 
 
 def predict(image_name):
@@ -139,123 +155,121 @@ def predict(image_name):
     return predicted_caption
 
 
-if len(sys.argv) < 2:
-    usage()
-    exit(1)
+## START PROGRAM
 
-mode = sys.argv[1]
+if __name__ == "__main__":
 
-dataset_name = ""
-num_training_examples = 1
-image_file_name = ""
+    # CHECK ARGS
+    if len(sys.argv) < 2:
+        usage()
+        exit(1)
 
-if mode == "train":
-    num_args = 2 + 2
+    mode = sys.argv[1]
 
-    if len(sys.argv) < num_args:
-        usage_train()
+    dataset_name = ""
+    num_training_examples = 1
+    image_file_name = ""
 
-    for i in range(2, num_args):
-        a = sys.argv[i]
-        key, val = a.split("=")
+    if mode == "train":
+        num_args = 2 + 2
 
-        if key == "dataset":
-            if val == "coco" or val == "flickr":
-                dataset_name = val
-
-            else:
-                print("Invalid value's option: " + val)
-                usage_train()
-
-        elif key == "num_example":
-            try:
-                num_training_examples = int(val)
-
-            except:
-                print("Invalid value's option: " + val)
-                usage_train()
-
-        else:
-            print("Invalid option: " + key)
+        if len(sys.argv) < num_args:
             usage_train()
 
+        for i in range(2, num_args):
+            a = sys.argv[i]
+            key, val = a.split("=")
 
-elif mode == "eval":
-    num_args = 2 + 1
+            if key == "dataset":
+                if val == "coco" or val == "flickr":
+                    dataset_name = val
 
-    if len(sys.argv) < num_args:
-        usage_eval()
+                else:
+                    print("Invalid value's option: " + val)
+                    usage_train()
 
-    for i in range(2, num_args):
-        a = sys.argv[i]
-        key, val = a.split("=")
+            elif key == "num_example":
+                try:
+                    num_training_examples = int(val)
 
-        if key == "dataset":
-            if val == "coco" or val == "flickr":
-                dataset_name = val
+                except:
+                    print("Invalid value's option: " + val)
+                    usage_train()
+
             else:
-                print("Invalid value's option: " + val)
-                usage_eval()
+                print("Invalid option: " + key)
+                usage_train()
 
-        else:
-            print("Invalid option: " + key)
+
+    elif mode == "eval":
+        num_args = 2 + 2
+
+        if len(sys.argv) < num_args:
             usage_eval()
 
+        for i in range(2, num_args):
+            a = sys.argv[i]
+            if "=" not in a:
+                continue
+            key, val = a.split("=")
 
-elif mode == "predict":
-    num_args = 2 + 1
+            if key == "dataset":
+                if val == "coco" or val == "flickr":
+                    dataset_name = val
+                else:
+                    print("Invalid value's option: " + val)
+                    usage_eval()
+            elif key == "num_example":
+                try:
+                    num_training_examples = int(val)
 
-    if len(sys.argv) < num_args:
-        usage_predict()
+                except:
+                    print("Invalid value's option: " + val)
+                    usage_eval()
 
-    for i in range(2, num_args):
-        a = sys.argv[i]
-        key, val = a.split("=")
-        if key == "filename":
-            image_file_name = val
-            if not os.path.isfile(image_file_name):
-                print("404 File Not Found:" + image_file_name)
-                usage_predict()
-        else:
-            print("Invalid option: " + key)
+            else:
+                print("Invalid option: " + key)
+                usage_eval()
 
+
+    elif mode == "predict":
+        num_args = 2 + 1
+
+        if len(sys.argv) < num_args:
             usage_predict()
 
-from model import COCODataset, FlickrDataset, Dataset, create_NN
-from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
-    predict_caption, store_vocabulary, load_vocabulary, data_generator
+        for i in range(2, num_args):
+            a = sys.argv[i]
+            key, val = a.split("=")
+            if key == "filename":
+                image_file_name = val
+                if not os.path.isfile(image_file_name):
+                    print("404 File Not Found:" + image_file_name)
+                    usage_predict()
+            else:
+                print("Invalid option: " + key)
 
-if not os.path.isdir(data_path):
-    os.makedirs(data_path)
+                usage_predict()
 
-if dataset_name == "coco":
-    dataset = COCODataset(data_path)
-elif dataset_name == "flickr":
-    dataset = FlickrDataset(data_path)
+    if not os.path.isdir(data_path):
+        os.makedirs(data_path)
 
-if mode == "train":
+    if dataset_name == "coco":
+        dataset = COCODataset(data_path)
+    elif dataset_name == "flickr":
+        dataset = FlickrDataset(data_path)
 
-    train(dataset, num_training_examples)
+    if mode == "train":
 
+        train(dataset, num_training_examples)
 
-
-
-
-elif mode == "eval":
-    eval()
-
-
-
-
-
-
-
+    elif mode == "eval":
+        eval()
 
 
 
-elif mode == "predict":
-    #    image_file_name = "COCO_train2014_000000000025.jpg"  # DEBUG
-    #    image_file_name = "1067180831_a59dc64344.jpg"  # DEBUG
-    predicted_caption = predict(image_file_name)
+    elif mode == "predict":
 
-exit(0)
+        predicted_caption = predict(image_file_name)
+
+    exit(0)

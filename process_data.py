@@ -52,13 +52,16 @@ def to_captions_list(all_captions):
     return all_train_captions
 
 
-def add_start_end_token(all_captions_list):
-    all_captions_list_token = []
-    for c in all_captions_list:
-        new_c = 'start_seq ' + c + ' end_seq'
-        all_captions_list_token.append(new_c)
+def add_start_end_token(all_captions):
+    all_captions_token = collections.defaultdict(list)
 
-    return all_captions_list_token
+    for key, cap_list in all_captions.items():
+
+        for c in cap_list:
+            new_c = 'start_seq ' + c + ' end_seq'
+            all_captions_token[key].append(new_c)
+
+    return all_captions_token
 
 
 def generate_vocabulary(all_captions_list):

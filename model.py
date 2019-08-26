@@ -51,6 +51,10 @@ class Dataset:
         return dataset.load_train_captions(num_training_examples)
 
     @staticmethod
+    def load_eval_captions(dataset, num_training_examples):
+        return dataset.load_eval_captions(num_training_examples)
+
+    @staticmethod
     def load_images_name(dataset, images_id_list):
         return dataset.load_images_name(images_id_list)
 
@@ -80,7 +84,7 @@ class FlickrDataset():
             except:
                 pass
             os.system("git clone --progress -v https://github.com/luca-ant/WhatsSee_dataset.git " + self.subdir)
-            #Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
+            # Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
 
         else:
             print("Captions already exists")
@@ -135,8 +139,34 @@ class FlickrDataset():
 
             train_captions = dict(list(train_captions.items())[:num_training_examples])
 
-        from process_data import clean_captions
-        train_captions = clean_captions(train_captions)
+        return train_captions
+
+    def load_eval_captions(self, num_training_examples):
+        train_captions = collections.defaultdict(list)
+        image_names = []
+        with open(os.path.dirname(self.captions_file_path) + "/Flickr_8k.devImages.txt", 'r') as f:
+            for line in f:
+                image_names.append(line.strip())
+
+        with open(self.captions_file_path, 'r') as f:
+
+            for line in f:
+                tokens = line.split()
+                # take the first token as the image id, the rest as the description
+                image_id, image_cap = tokens[0], tokens[1:]
+                image_id = image_id.split('.')[0]
+                image_cap = ' '.join(image_cap)
+                if (image_id + ".jpg" in image_names):
+                    train_captions[image_id].append(image_cap)
+
+        if num_training_examples != 0:
+            # Shuffle captions
+            l = list(train_captions.items())
+            random.shuffle(l)
+            train_captions = dict(l)
+
+            train_captions = dict(list(train_captions.items())[:num_training_examples])
+
         return train_captions
 
     def load_images_name(self, images_id_list):
@@ -239,8 +269,21 @@ class COCODataset():
 
             train_captions = dict(list(all_captions.items())[:num_training_examples])
 
-        from process_data import clean_captions
-        train_captions = clean_captions(train_captions)
+        return train_captions
+
+    def load_eval_captions(self, num_training_examples):
+
+        all_captions = self.load_captions()  # dict image_id - caption
+
+        if num_training_examples == 0:
+            num_training_examples = 1000
+
+        # Shuffle captions
+        l = list(all_captions.items())
+        random.shuffle(l)
+        all_captions = dict(l)
+
+        train_captions = dict(list(all_captions.items())[:num_training_examples])
 
         return train_captions
 
