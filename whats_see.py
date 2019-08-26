@@ -11,10 +11,12 @@ tf.get_logger().setLevel(logging.ERROR)
 
 current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-data_path = current_work_dir + "/data/"
-vocabulary_path = current_work_dir + "/vocabulary/"
-weight_path = current_work_dir + "/weights/"
-checkpoints_path = current_work_dir + "/checkpoints/"
+data_dir = current_work_dir + "/data/"
+vocabulary_dir = current_work_dir + "/vocabulary/"
+weights_dir = current_work_dir + "/weights/"
+checkpoints_dir = current_work_dir + "/checkpoints/"
+weights_file=weights_dir+"weights.h5"
+checkpoint_weight_file=checkpoints_dir+"last_model_checkpoint.h5"
 
 
 def usage():
@@ -61,11 +63,14 @@ def train(dataset, num_training_examples):
         index_word_dict[i] = w
         i += 1
 
-    store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_path, max_cap_len)
+    store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
 
     train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
 
     model = create_NN(len(vocabulary), max_cap_len)
+
+    if os.path.isfile(checkpoint_weight_file):
+        model.load_weights(checkpoint_weight_file)
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
@@ -74,13 +79,15 @@ def train(dataset, num_training_examples):
 
     # history = model.fit([x_image, x_text], y_caption, epochs=3, verbose=1,batch_size=16)
 
-    if os.path.isdir(checkpoints_path):
-        os.system("rm -rf " + checkpoints_path)
-    os.mkdir(checkpoints_path)
+    if os.path.isfile(checkpoint_weight_file):
+        os.remove(checkpoint_weight_file)
 
-    # checkpoints_callback = ModelCheckpoint(checkpoints_path + "model-{epoch:03d}-{acc:03f}.h5", monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', save_best_only=True, period=5)
+    if not os.path.isdir(checkpoints_dir):
+        os.mkdir(checkpoints_dir)
 
-    checkpoints_callback = ModelCheckpoint(checkpoints_path + "last_model_checkpoint.h5", monitor='val_acc',
+    # checkpoints_callback = ModelCheckpoint(checkpoints_dir + "model-{epoch:03d}-{acc:03f}.h5", monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', save_best_only=True, period=5)
+
+    checkpoints_callback = ModelCheckpoint(checkpoint_weight_file, monitor='val_acc',
                                            save_weights_only=True, verbose=1, mode='auto', period=1)
 
     num_images_per_batch = 32
@@ -91,10 +98,10 @@ def train(dataset, num_training_examples):
 
     model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
 
-    if not os.path.isdir(weight_path):
-        os.makedirs(weight_path)
+    if not os.path.isdir(weights_dir):
+        os.makedirs(weights_dir)
 
-    model.save_weights(weight_path + "weights.h5", True)
+    model.save_weights(weights_file, True)
 
 
 def eval():
@@ -106,7 +113,7 @@ def eval():
 
     eval_captions = add_start_end_token(eval_captions)
 
-    vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_path)
+    vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_dir)
 
     print("VOCABULARY SIZE: " + str(len(vocabulary)))
     print("MAX CAPTION LENGTH: " + str(max_cap_len))
@@ -115,8 +122,8 @@ def eval():
 
     model = create_NN(len(vocabulary), max_cap_len)
 
-    model.load_weights(weight_path + "weights.h5")
-    #    model.load_weights(checkpoints_path + "last_model_checkpoint.h5")
+    model.load_weights(weights_file)
+    #    model.load_weights(checkpoints_dir + "last_model_checkpoint.h5")
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
@@ -133,14 +140,14 @@ def eval():
 
 
 def predict(image_name):
-    vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_path)
+    vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_dir)
 
     print("VOCABULARY SIZE: " + str(len(vocabulary)))
     print("MAX CAPTION LENGTH: " + str(max_cap_len))
 
     model = create_NN(len(vocabulary), max_cap_len)
 
-    model.load_weights(weight_path + "weights.h5")
+    model.load_weights(weights_file)
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
     model.summary()
@@ -251,13 +258,13 @@ if __name__ == "__main__":
 
                 usage_predict()
 
-    if not os.path.isdir(data_path):
-        os.makedirs(data_path)
+    if not os.path.isdir(data_dir):
+        os.makedirs(data_dir)
 
     if dataset_name == "coco":
-        dataset = COCODataset(data_path)
+        dataset = COCODataset(data_dir)
     elif dataset_name == "flickr":
-        dataset = FlickrDataset(data_path)
+        dataset = FlickrDataset(data_dir)
 
     if mode == "train":
 

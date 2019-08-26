@@ -69,8 +69,8 @@ class Dataset:
 
 class FlickrDataset():
 
-    def __init__(self, data_path):
-        self.subdir = data_path + "flickr_dataset/"
+    def __init__(self, data_dir):
+        self.subdir = data_dir + "flickr_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/"
         self.captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
@@ -188,8 +188,8 @@ class FlickrDataset():
 
 class COCODataset():
 
-    def __init__(self, data_path):
-        self.subdir = data_path + "coco_dataset/"
+    def __init__(self, data_dir):
+        self.subdir = data_dir + "coco_dataset/"
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/train2014/"
         self.captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
