@@ -1,6 +1,8 @@
 import os
 import sys
 import logging
+import traceback
+
 import tensorflow as tf
 from model import COCODataset, FlickrDataset, Dataset, create_NN
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
@@ -12,11 +14,12 @@ tf.get_logger().setLevel(logging.ERROR)
 current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 data_dir = current_work_dir + "/data/"
-vocabulary_dir = current_work_dir + "/vocabulary/"
-weights_dir = current_work_dir + "/weights/"
-checkpoints_dir = current_work_dir + "/checkpoints/"
-weights_file=weights_dir+"weights.h5"
-checkpoint_weight_file=checkpoints_dir+"last_model_checkpoint.h5"
+vocabulary_dir = data_dir + "vocabulary/"
+weights_dir = data_dir + "weights/"
+checkpoints_dir = data_dir + "checkpoints/"
+
+weights_file = weights_dir + "weights.h5"
+checkpoint_weight_file = checkpoints_dir + "last_model_weights.h5"
 
 
 def usage():
@@ -70,9 +73,14 @@ def train(dataset, num_training_examples):
     model = create_NN(len(vocabulary), max_cap_len)
 
     if os.path.isfile(checkpoint_weight_file):
-        model.load_weights(checkpoint_weight_file)
+        try:
+            model.load_weights(checkpoint_weight_file)
+        except:
+            print("IMPOSSIBLE TO LOAD PARTIAL WEIGHTS")
+            # traceback.print_exc()
+            pass
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.summary()
 
     # x_text, x_image, y_caption = prepare_data(dataset, train_captions, train_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
@@ -96,7 +104,12 @@ def train(dataset, num_training_examples):
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)
 
-    model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
+    history = model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1,
+                                  callbacks=[checkpoints_callback])
+    loss = history.history['loss'][-1]
+    acc = history.history['acc'][-1]
+
+    print("LOSS: " + str(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
 
     if not os.path.isdir(weights_dir):
         os.makedirs(weights_dir)
@@ -108,7 +121,7 @@ def eval():
     captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
     eval_captions = Dataset.load_eval_captions(dataset, num_training_examples)
-    eval_captions = clean_captions(eval_captions)
+#    eval_captions = clean_captions(eval_captions)
     eval_images_name_list = Dataset.load_images_name(dataset, eval_captions.keys())
 
     eval_captions = add_start_end_token(eval_captions)
@@ -125,7 +138,7 @@ def eval():
     model.load_weights(weights_file)
     #    model.load_weights(checkpoints_dir + "last_model_checkpoint.h5")
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.summary()
 
     num_images_per_batch = 32
@@ -149,10 +162,8 @@ def predict(image_name):
 
     model.load_weights(weights_file)
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=["accuracy"])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.summary()
-
-    ### PREDICT
 
     predicted_caption = predict_caption(model, image_name, max_cap_len,
                                         word_index_dict, index_word_dict)
