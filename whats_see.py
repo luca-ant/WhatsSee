@@ -89,7 +89,7 @@ def train(dataset, num_training_examples):
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)
 
-    model.fit_generator(generator, epochs=1, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
+    model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=1, callbacks=[checkpoints_callback])
 
     if not os.path.isdir(weight_path):
         os.makedirs(weight_path)
