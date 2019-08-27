@@ -145,18 +145,39 @@ def load_train_data(train_dir):
 
     return train_captions, train_images_as_vector
 
+def store_val_data(train_dir, val_captions, val_images_as_vector):
+    print("STORE VAL DATA")
+
+    if not os.path.isdir(train_dir):
+        os.makedirs(train_dir)
+
+    with open(train_dir + "val_captions.json", 'w') as f:
+        f.write(json.dumps(val_captions))
+
+    f = open(train_dir + "val_images_as_vector.pkl", 'wb')
+    pickle.dump(val_images_as_vector, f)
+    f.close()
+
+def load_val_data(train_dir):
+    print("LOAD VAL DATA")
+
+    with open(train_dir + "val_captions.json") as f:
+        val_captions = json.load(f)
+
+    f = open(train_dir + "val_images_as_vector.pkl", "rb")
+    val_images_as_vector = pickle.load(f)
+    f.close()
+
+    return val_captions, val_images_as_vector
 
 def preprocess_images(images_dir_path, train_images_name):
     print("PROCESSING IMAGES")
     images_as_vector = collections.defaultdict()
-
-    #   modelvgg = VGG16(include_top=True, weights=None)
     modelvgg = VGG16(include_top=True)
-    #       modelvgg.load_weights("../input/vgg16-weights-image-captioning/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
 
     modelvgg.layers.pop()
     modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)
-    modelvgg.summary()
+    # modelvgg.summary()
 
     with progressbar.ProgressBar(max_value=len(train_images_name)) as bar:
         for i, image_name in enumerate(train_images_name):
@@ -171,13 +192,13 @@ def preprocess_images(images_dir_path, train_images_name):
     return images_as_vector
 
 
-def prepare_data(dataset, train_captions, train_images_as_vector, word_index_dict, vocab_size, max_cap_len):
+def prepare_data(dataset, eval_captions, eval_images_as_vector, word_index_dict, vocab_size, max_cap_len):
     x_text, x_image, y_caption = [], [], []
 
-    for image_id, cap_list in train_captions.items():
+    for image_id, cap_list in eval_captions.items():
 
         image_name = Dataset.get_image_name(dataset, image_id)
-        image = train_images_as_vector[image_name]
+        image = eval_images_as_vector[image_name]
 
         for c in cap_list:
             int_seq = [word_index_dict[word] for word in c.split(' ') if word in word_index_dict]
@@ -195,7 +216,6 @@ def prepare_data(dataset, train_captions, train_images_as_vector, word_index_dic
     x_text = np.array(x_text)
     x_image = np.array(x_image)
     y_caption = np.array(y_caption)
-    print(" {} {} {}".format(x_text.shape, x_image.shape, y_caption.shape))
     return x_text, x_image, y_caption
 
 
@@ -207,6 +227,7 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
 
         for image_id, cap_list in train_captions.items():
             n += 1
+
             image_name = Dataset.get_image_name(dataset, image_id)
 
             image = train_images_as_vector[image_name]

@@ -9,8 +9,8 @@ from keras.engine.saving import load_model, save_model
 
 from model import COCODataset, FlickrDataset, Dataset, create_NN
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
-    predict_caption, store_vocabulary, load_vocabulary, data_generator, clean_captions, load_train_data, store_train_data
-from keras.callbacks import ModelCheckpoint
+    predict_caption, store_vocabulary, load_vocabulary, data_generator, clean_captions, load_train_data, store_train_data, store_val_data, load_val_data
+from keras.callbacks import ModelCheckpoint, Callback
 
 import tensorflow as tf
 
@@ -25,20 +25,27 @@ train_dir = data_dir + "train/"
 
 weights_file = weights_dir + "weights.h5"
 model_file = train_dir + "model.h5"
+dataset_name_file = train_dir + "dataset_name.txt"
+epoch_file = train_dir + "last_epoch.txt"
+
+
+class EpochSaver(Callback):
+    def __init__(self, start_epoch):
+        self.epoch = start_epoch
+
+    def on_epoch_end(self, epoch, logs={}):
+        with open(epoch_file, "w") as f:
+            f.write(str(self.epoch))
+        self.epoch += 1
 
 
 def usage():
-    print("Usage: " + sys.argv[0] + " [train | eval | predict] ")
+    print("Usage: " + sys.argv[0] + " [train | eval | predict | resume] ")
     exit(1)
 
 
 def usage_train():
-    print("Usage: " + sys.argv[0] + " train -d [coco | flickr] -n NUMBER")
-    exit(2)
-
-
-def usage_eval():
-    print("Usage: " + sys.argv[0] + " eval -d [coco | flickr] -n NUMBER")
+    print("Usage: " + sys.argv[0] + " train -d [coco | flickr] -nt NUMBER -nv NUMBER")
     exit(2)
 
 
@@ -47,71 +54,142 @@ def usage_predict():
     exit(2)
 
 
-def train(dataset, num_training_examples):
+def usage_resume():
+    print("Usage: " + sys.argv[0] + " resume")
+    exit(2)
+
+
+def resume():
     if os.path.isdir(train_dir):
         print("RESUME LAST TRAINING")
+
+        # load dataset name
+        with open(dataset_name_file, "r") as f:
+            dataset_name = f.readline().strip()
+        dataset = Dataset.create_dataset(dataset_name)
+
+        # load last epoch number
+        with open(epoch_file, "r") as f:
+            last_epoch = int(f.readline().strip())
+
+        # load vocabulary, train and val data
         vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_dir)
         model = load_model(model_file)
         train_captions, train_images_as_vector = load_train_data(train_dir)
+        val_captions, val_images_as_vector = load_val_data(train_dir)
+
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        if not os.path.isdir(weights_dir):
+            os.makedirs(weights_dir)
+
+        # callbacks
+        save_weights_callback = ModelCheckpoint(weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
+        save_epoch_callback = EpochSaver(last_epoch + 1)
+        save_model_callback = ModelCheckpoint(model_file, verbose=1, period=1)
+
+        # params
+        batch_size = 16
+        steps = (len(train_captions) // batch_size) + 1
+        model.summary()
+
+        # prepare train and val data
+        x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
+        generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
+                                   len(vocabulary), batch_size)
+
+        print("TRAINING MODEL")
+        history = model.fit_generator(generator, epochs=150, steps_per_epoch=steps, verbose=2, validation_data=([x_val_image, x_val_text], y_val_caption),
+                                      callbacks=[save_weights_callback, save_model_callback, save_epoch_callback], initial_epoch=last_epoch)
+
+        loss = history.history['loss'][-1]
+        acc = history.history['acc'][-1]
+
+        print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
+
+        print("SAVING WEIGHTS TO " + weights_file)
+
+        model.save_weights(weights_file, True)
+
+        return history
 
     else:
-        print("START NEW TRAINING")
-        captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
+        print("LAST TRAINING DATA NOT FOUND")
+        exit(3)
 
-        train_captions = Dataset.load_train_captions(dataset, num_training_examples)
-        train_captions = clean_captions(train_captions)
-        train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
-        train_captions = add_start_end_token(train_captions)
-        train_captions_list = to_captions_list(train_captions)
 
-        max_cap_len = max(len(d.split()) for d in train_captions_list)
+def train(dataset, num_tran_examples, num_val_examples):
+    print("START NEW TRAINING")
+    1
+    if os.path.isdir(train_dir):
+        os.system("rm -rf " + train_dir)
 
-        vocabulary = generate_vocabulary(train_captions_list)
-        print("VOCABULARY SIZE: " + str(len(vocabulary)))
-        print("MAX CAPTION LENGTH: " + str(max_cap_len))
-        vocabulary.append("0")
+    captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
-        index_word_dict = {}
-        word_index_dict = {}
-        i = 1
-        for w in vocabulary:
-            word_index_dict[w] = i
-            index_word_dict[i] = w
-            i += 1
+    # load captions from dataset
+    train_captions = Dataset.load_train_captions(dataset, num_tran_examples)
+    train_captions = clean_captions(train_captions)
+    train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
+    train_captions = add_start_end_token(train_captions)
+    train_captions_list = to_captions_list(train_captions)
 
-        store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
-        train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
+    val_captions = Dataset.load_eval_captions(dataset, num_val_examples)
+    val_captions = clean_captions(val_captions)
+    val_images_name_list = Dataset.load_images_name(dataset, val_captions.keys())
+    val_captions = add_start_end_token(val_captions)
 
-        store_train_data(train_dir, train_captions, train_images_as_vector)
+    # generate vocabulary
+    max_cap_len = max(len(d.split()) for d in train_captions_list)
+    vocabulary = generate_vocabulary(train_captions_list)
+    print("VOCABULARY SIZE: " + str(len(vocabulary)))
+    print("MAX CAPTION LENGTH: " + str(max_cap_len))
+    vocabulary.append("0")
+    index_word_dict = {}
+    word_index_dict = {}
+    i = 1
+    for w in vocabulary:
+        word_index_dict[w] = i
+        index_word_dict[i] = w
+        i += 1
 
-        model = create_NN(len(vocabulary), max_cap_len)
-        save_model(model, model_file)
+    model = create_NN(len(vocabulary), max_cap_len)
 
-    model.summary()
+    # load images from dataset
+    train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
+    val_images_as_vector = preprocess_images(images_dir_path, val_images_name_list)
+
+    # store vocabulary, train and val data
+    with open(dataset_name_file, "w") as f:
+        f.write(dataset.get_name())
+
+    store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
+    store_train_data(train_dir, train_captions, train_images_as_vector)
+    save_model(model, model_file)
+    store_val_data(train_dir, val_captions, val_images_as_vector)
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-    # x_text, x_image, y_caption = prepare_data(dataset, train_captions, train_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
-
-    # history = model.fit([x_image, x_text], y_caption, epochs=3, verbose=1,batch_size=16)
 
     if not os.path.isdir(weights_dir):
         os.makedirs(weights_dir)
 
-    # save_weights_callback = ModelCheckpoint(weights_dir + "weights-epoch_{epoch:03d}.h5", monitor='val_acc',save_weights_only=True, verbose=1, mode='auto',period=1)
-
+    # callbacks
     save_weights_callback = ModelCheckpoint(weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
-    save_model_callback = ModelCheckpoint(model_file, verbose=1, mode='auto', period=1)
+    save_epoch_callback = EpochSaver(1)
+    save_model_callback = ModelCheckpoint(model_file, verbose=1, period=1)
 
     batch_size = 16
-    steps = len(train_captions) // batch_size
+    steps = (len(train_captions) // batch_size) + 1
 
-    print("TRAINING MODEL")
+    model.summary()
 
+    # prepare train and val data
+    x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), batch_size)
 
-    history = model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=2, callbacks=[save_weights_callback, save_model_callback])
+    print("TRAINING MODEL")
+    history = model.fit_generator(generator, epochs=150, steps_per_epoch=steps, verbose=2, validation_data=([x_val_image, x_val_text], y_val_caption),
+                                  callbacks=[save_weights_callback, save_model_callback, save_epoch_callback])
 
     loss = history.history['loss'][-1]
     acc = history.history['acc'][-1]
@@ -123,45 +201,6 @@ def train(dataset, num_training_examples):
     model.save_weights(weights_file, True)
 
     return history
-
-
-def eval():
-    captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
-
-    eval_captions = Dataset.load_eval_captions(dataset, num_training_examples)
-    #    eval_captions = clean_captions(eval_captions)
-    eval_images_name_list = Dataset.load_images_name(dataset, eval_captions.keys())
-
-    eval_captions = add_start_end_token(eval_captions)
-
-    vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_dir)
-
-    print("VOCABULARY SIZE: " + str(len(vocabulary)))
-    print("MAX CAPTION LENGTH: " + str(max_cap_len))
-
-    eval_images_as_vector = preprocess_images(images_dir_path, eval_images_name_list)
-
-    model = create_NN(len(vocabulary), max_cap_len)
-
-    model.load_weights(weights_file)
-    #    model.load_weights(checkpoints_dir + "last_model_checkpoint.h5")
-
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.summary()
-
-    batch_size = 16
-    steps = len(eval_captions) // batch_size
-
-    print("EVALUATING MODEL")
-
-    generator = data_generator(dataset, eval_captions, eval_images_as_vector, word_index_dict, max_cap_len,
-                               len(vocabulary), batch_size)
-    loss, acc = model.evaluate_generator(generator, steps=steps, max_queue_size=10, workers=1,
-                                         use_multiprocessing=False, verbose=1)
-
-    print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
-
-    return loss, acc
 
 
 def predict(image_name):
@@ -197,12 +236,13 @@ if __name__ == "__main__":
     mode = sys.argv[1]
 
     dataset_name = "flickr"
-    num_training_examples = 0
+    num_tran_examples = 0
+    num_val_examples = 0
     image_file_name = ""
 
     if mode == "train":
-        num_args = 2 + (2 * 2)
-        num_training_examples = 6000
+        num_args = 2 + (2 * 3)
+        num_tran_examples = 6000
         num_args = min(num_args, len(sys.argv))
         #        if len(sys.argv) < num_args:
         #            usage_train()
@@ -219,49 +259,31 @@ if __name__ == "__main__":
                     print("Invalid value's option: " + val)
                     usage_train()
 
-            elif op == "-n":
+            elif op == "-nt":
                 try:
-                    num_training_examples = int(val)
+                    num_tran_examples = int(val)
 
                 except:
                     print("Invalid value's option: " + val)
                     usage_train()
 
+            elif op == "-nv":
+                try:
+                    num_val_examples = int(val)
+
+                except:
+                    print("Invalid value's option: " + val)
+                    usage_train()
             else:
                 print("Invalid option: " + op)
                 usage_train()
 
 
+    elif mode == "resume":
+        num_args = 2 + (2 * 0)
 
-    elif mode == "eval":
-        num_args = 2 + (2 * 2)
-        num_training_examples = 1000
-        num_args = min(num_args, len(sys.argv))
-
-        #        if len(sys.argv) < num_args:
-        #            usage_eval()
-
-        for i in range(2, num_args, 2):
-            op = sys.argv[i]
-            val = sys.argv[i + 1]
-
-            if op == "-d":
-                if val == "coco" or val == "flickr":
-                    dataset_name = val
-                else:
-                    print("Invalid value's option: " + val)
-                    usage_eval()
-            elif op == "-n":
-                try:
-                    num_training_examples = int(val)
-
-                except:
-                    print("Invalid value's option: " + val)
-                    usage_eval()
-
-            else:
-                print("Invalid option: " + op)
-                usage_eval()
+        if len(sys.argv) != num_args:
+            usage_resume()
 
 
     elif mode == "predict":
@@ -287,17 +309,16 @@ if __name__ == "__main__":
     if not os.path.isdir(data_dir):
         os.makedirs(data_dir)
 
-    if dataset_name == "coco":
-        dataset = COCODataset(data_dir)
-    elif dataset_name == "flickr":
-        dataset = FlickrDataset(data_dir)
+    dataset = Dataset.create_dataset(dataset_name)
 
     if mode == "train":
 
-        hystory = train(dataset, num_training_examples)
+        hystory = train(dataset, num_tran_examples, num_val_examples)
 
-    elif mode == "eval":
-        loss, acc = eval()
+
+    elif mode == "resume":
+        hystory = resume()
+
 
     elif mode == "predict":
 

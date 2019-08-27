@@ -4,11 +4,11 @@ import os
 import random
 import wget
 import zipfile
-
 from git import Repo, RemoteProgress
 
 from keras import Input, Model
 from keras.layers import Dropout, Dense, LSTM, Embedding, add
+
 
 
 def create_NN(vocab_size, max_cap_len):
@@ -66,6 +66,16 @@ class Dataset:
     def load_all_images_name(dataset):
         return dataset.load_all_images_name()
 
+    @staticmethod
+    def create_dataset(dataset_name):
+        import whats_see
+
+        if dataset_name == "coco":
+            dataset = COCODataset(whats_see.data_dir)
+        elif dataset_name == "flickr":
+            dataset = FlickrDataset(whats_see.data_dir)
+        return dataset
+
 
 class FlickrDataset():
 
@@ -74,6 +84,10 @@ class FlickrDataset():
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/"
         self.captions_file_path = self.caption_dir_path + 'Flickr8k.token.txt'
+
+    def get_name(self):
+        return "flickr"
+
 
     def download_dataset(self):
 
@@ -173,7 +187,7 @@ class FlickrDataset():
         images_name_list = []
         for id in images_id_list:
             image_name = id + '.jpg'
-            if os.path.isfile(self.images_dir_path + "/" + image_name):
+            if os.path.isfile(self.images_dir_path + image_name):
                 images_name_list.append(image_name)
 
         return images_name_list
@@ -193,6 +207,10 @@ class COCODataset():
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/train2014/"
         self.captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
+
+
+    def get_name(self):
+        return "coco"
 
     def download_dataset(self):
 
@@ -292,7 +310,7 @@ class COCODataset():
         images_name_list = []
         for id in images_id_list:
             image_name = "COCO_train2014_" + id + ".jpg"
-            if os.path.isfile(self.images_dir_path + "/" + image_name):
+            if os.path.isfile(self.images_dir_path + image_name):
                 images_name_list.append(image_name)
         return images_name_list
 
