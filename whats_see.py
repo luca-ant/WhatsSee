@@ -152,7 +152,7 @@ def eval():
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.summary()
 
-    num_images_per_batch = 32
+    num_images_per_batch = 16
     steps = len(eval_captions)
 
     print("EVALUATING MODEL")
