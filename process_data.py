@@ -120,6 +120,8 @@ def load_vocabulary(vocabulary_dir):
 
 
 def store_train_data(train_dir, train_captions, train_images_as_vector):
+    print("STORE TRAIN DATA")
+
     if not os.path.isdir(train_dir):
         os.makedirs(train_dir)
 
