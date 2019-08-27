@@ -7,8 +7,7 @@ import whats_see
 
 PORT = 8888
 
-whats_see.current_work_dir=os.path.dirname(os.path.abspath(sys.argv[0]))
-
+whats_see.current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 
 class WhatsSeeHandler(BaseHTTPRequestHandler):
@@ -20,8 +19,6 @@ class WhatsSeeHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(bytes(whats_see.current_work_dir, "UTF-8"))
         return
-
-
 
 
 if __name__ == "__main__":

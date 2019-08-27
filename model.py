@@ -251,6 +251,7 @@ class COCODataset():
         for c in captions['annotations']:
             caption_string = c['caption']
             image_id = c['image_id']
+            image_id = "%012d" % (image_id)
             all_captions[image_id].append(caption_string)
         return all_captions
 
@@ -290,13 +291,13 @@ class COCODataset():
     def load_images_name(self, images_id_list):
         images_name_list = []
         for id in images_id_list:
-            image_name = 'COCO_train2014_' + '%012d.jpg' % (id)
+            image_name = "COCO_train2014_" + id + ".jpg"
             if os.path.isfile(self.images_dir_path + "/" + image_name):
                 images_name_list.append(image_name)
         return images_name_list
 
     def get_image_name(self, image_id):
-        image_name = "COCO_train2014_" + "%012d.jpg" % (image_id)
+        image_name = "COCO_train2014_" + image_id + ".jpg"
         return image_name
 
     def load_all_images_name(self):

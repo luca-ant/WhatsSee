@@ -207,7 +207,6 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
 
         for image_id, cap_list in train_captions.items():
             n += 1
-
             image_name = Dataset.get_image_name(dataset, image_id)
 
             image = train_images_as_vector[image_name]

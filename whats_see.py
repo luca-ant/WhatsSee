@@ -111,7 +111,7 @@ def train(dataset, num_training_examples):
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), batch_size)
 
-    history = model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback, save_model_callback])
+    history = model.fit_generator(generator, epochs=100, steps_per_epoch=steps, verbose=2, callbacks=[save_weights_callback, save_model_callback])
 
     loss = history.history['loss'][-1]
     acc = history.history['acc'][-1]
