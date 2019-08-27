@@ -82,9 +82,6 @@ def train(dataset, num_training_examples):
         store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
         train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
 
-        print(type(list(train_captions.keys())[0]))
-        print(type(list(train_images_as_vector.keys())[0]))
-
         store_train_data(train_dir, train_captions, train_images_as_vector)
 
         model = create_NN(len(vocabulary), max_cap_len)
@@ -109,10 +106,12 @@ def train(dataset, num_training_examples):
     num_images_per_batch = 32
     steps = len(train_captions)
 
+    print("TRAINING MODEL")
+
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)
 
-    history = model.fit_generator(generator, epochs=5, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback, save_model_callback])
+    history = model.fit_generator(generator, epochs=10, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback, save_model_callback])
 
     loss = history.history['loss'][-1]
     acc = history.history['acc'][-1]
@@ -155,6 +154,8 @@ def eval():
 
     num_images_per_batch = 32
     steps = len(eval_captions)
+
+    print("EVALUATING MODEL")
 
     generator = data_generator(dataset, eval_captions, eval_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)

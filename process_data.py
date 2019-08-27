@@ -145,6 +145,7 @@ def load_train_data(train_dir):
 
 
 def preprocess_images(images_dir_path, train_images_name):
+    print("PROCESSING IMAGES")
     images_as_vector = collections.defaultdict()
 
     #   modelvgg = VGG16(include_top=True, weights=None)
