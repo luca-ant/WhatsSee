@@ -105,11 +105,11 @@ def resume():
         loss = history.history['loss'][-1]
         acc = history.history['acc'][-1]
 
-        print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
-
         print("SAVING WEIGHTS TO " + weights_file)
 
         model.save_weights(weights_file, True)
+        print("TRAINING COMPLETE!")
+        print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
 
         return history
 
@@ -194,11 +194,11 @@ def train(dataset, num_tran_examples, num_val_examples):
     loss = history.history['loss'][-1]
     acc = history.history['acc'][-1]
 
-    print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
-
     print("SAVING WEIGHTS TO " + weights_file)
 
     model.save_weights(weights_file, True)
+    print("TRAINING COMPLETE!")
+    print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
 
     return history
 
@@ -228,13 +228,14 @@ def predict(image_name):
 
 if __name__ == "__main__":
 
-    # CHECK ARGS
+    # check args
     if len(sys.argv) < 2:
         usage()
         exit(1)
 
     mode = sys.argv[1]
 
+    # default values
     dataset_name = "flickr"
     num_tran_examples = 0
     num_val_examples = 0
@@ -311,6 +312,7 @@ if __name__ == "__main__":
 
     dataset = Dataset.create_dataset(dataset_name)
 
+    # select mode
     if mode == "train":
 
         hystory = train(dataset, num_tran_examples, num_val_examples)
