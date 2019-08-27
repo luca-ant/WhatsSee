@@ -287,7 +287,7 @@ if __name__ == "__main__":
 
     if mode == "train":
 
-        train(dataset, num_training_examples)
+        hystory = train(dataset, num_training_examples)
 
     elif mode == "eval":
         loss, acc = eval()
