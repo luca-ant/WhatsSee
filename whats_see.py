@@ -103,15 +103,15 @@ def train(dataset, num_training_examples):
     save_weights_callback = ModelCheckpoint(weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
     save_model_callback = ModelCheckpoint(model_file, verbose=1, mode='auto', period=1)
 
-    num_images_per_batch = 32
-    steps = len(train_captions)
+    batch_size = 16
+    steps = len(train_captions) // batch_size
 
     print("TRAINING MODEL")
 
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
-                               len(vocabulary), num_images_per_batch)
+                               len(vocabulary), batch_size)
 
-    history = model.fit_generator(generator, epochs=10, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback, save_model_callback])
+    history = model.fit_generator(generator, epochs=50, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback, save_model_callback])
 
     loss = history.history['loss'][-1]
     acc = history.history['acc'][-1]
@@ -121,9 +121,6 @@ def train(dataset, num_training_examples):
     print("SAVING WEIGHTS TO " + weights_file)
 
     model.save_weights(weights_file, True)
-
-    if os.path.isdir(train_dir):
-        os.system("rm -rf " + train_dir)
 
     return history
 
@@ -152,13 +149,13 @@ def eval():
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.summary()
 
-    num_images_per_batch = 16
-    steps = len(eval_captions)
+    batch_size = 16
+    steps = len(eval_captions) // batch_size
 
     print("EVALUATING MODEL")
 
     generator = data_generator(dataset, eval_captions, eval_images_as_vector, word_index_dict, max_cap_len,
-                               len(vocabulary), num_images_per_batch)
+                               len(vocabulary), batch_size)
     loss, acc = model.evaluate_generator(generator, steps=steps, max_queue_size=10, workers=1,
                                          use_multiprocessing=False, verbose=1)
 
