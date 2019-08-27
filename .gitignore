@@ -5,5 +5,5 @@ __pycache__/
 venv/
 data/coco_dataset/
 data/flickr_dataset/
-data/checkpoints/
+data/train/
 predictions/
