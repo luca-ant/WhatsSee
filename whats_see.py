@@ -40,7 +40,7 @@ class EpochSaver(Callback):
 
 
 def usage():
-    print("Usage: " + sys.argv[0] + " [train | eval | predict | resume] ")
+    print("Usage: " + sys.argv[0] + " [train | predict | resume] ")
     exit(1)
 
 
