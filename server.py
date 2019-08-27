@@ -18,7 +18,7 @@ class WhatsSeeHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(bytes("Hello World", "UTF-8"))
+        self.wfile.write(bytes(whats_see.current_work_dir, "UTF-8"))
         return
 
 

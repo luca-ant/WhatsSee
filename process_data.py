@@ -1,6 +1,7 @@
 import os
 import json
 import collections
+import pickle
 import string
 
 import progressbar
@@ -74,48 +75,73 @@ def generate_vocabulary(all_captions_list):
     return list(set(vocabulary))
 
 
-def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_path, max_cap_len):
+def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len):
     print("STORE VOCABULARY")
 
-    if not os.path.isdir(vocabulary_path):
-        os.makedirs(vocabulary_path)
+    if not os.path.isdir(vocabulary_dir):
+        os.makedirs(vocabulary_dir)
 
-    with open(vocabulary_path + "vocabulary.json", 'w') as f:
+    with open(vocabulary_dir + "vocabulary.json", 'w') as f:
         #        f.write(json.dumps(vocabulary, default=lambda x: x.__dict__))
         f.write(json.dumps(vocabulary))
 
-    with open(vocabulary_path + "word_index_dict.json", 'w') as f:
+    with open(vocabulary_dir + "word_index_dict.json", 'w') as f:
         f.write(json.dumps(word_index_dict))
 
-    with open(vocabulary_path + "index_word_dict.json", 'w') as f:
+    with open(vocabulary_dir + "index_word_dict.json", 'w') as f:
         f.write(json.dumps(index_word_dict))
 
-    with open(vocabulary_path + "max_cap_len.json", 'w') as f:
+    with open(vocabulary_dir + "max_cap_len.json", 'w') as f:
         #        f.write(json.dumps(max_cap_len, default=lambda x: x.__dict__))
         f.write(json.dumps(max_cap_len))
 
 
-def load_vocabulary(vocabulary_path):
+def load_vocabulary(vocabulary_dir):
     print("LOAD VOCABULARY")
 
-    if not os.path.isdir(vocabulary_path):
-        os.makedirs(vocabulary_path)
+    if not os.path.isdir(vocabulary_dir):
+        os.makedirs(vocabulary_dir)
         print("Vocabulary NOT FOUND")
         return
 
-    with open(vocabulary_path + "vocabulary.json") as f:
+    with open(vocabulary_dir + "vocabulary.json") as f:
         vocabulary = json.load(f)
 
-    with open(vocabulary_path + "word_index_dict.json") as f:
+    with open(vocabulary_dir + "word_index_dict.json") as f:
         word_index_dict = json.load(f)
 
-    with open(vocabulary_path + "index_word_dict.json") as f:
+    with open(vocabulary_dir + "index_word_dict.json") as f:
         index_word_dict = json.load(f, object_hook=lambda d: {int(k) if k.isdigit() else k: v for k, v in d.items()})
 
-    with open(vocabulary_path + "max_cap_len.json") as f:
+    with open(vocabulary_dir + "max_cap_len.json") as f:
         max_cap_len = json.load(f)
 
     return vocabulary, word_index_dict, index_word_dict, max_cap_len
+
+
+def store_train_data(train_dir, train_captions, train_images_as_vector):
+    if not os.path.isdir(train_dir):
+        os.makedirs(train_dir)
+
+    with open(train_dir + "train_captions.json", 'w') as f:
+        f.write(json.dumps(train_captions))
+
+    f = open(train_dir + "train_images_as_vector.pkl", 'wb')
+    pickle.dump(train_images_as_vector, f)
+    f.close()
+
+
+def load_train_data(train_dir):
+    print("LOAD TRAIN DATA")
+
+    with open(train_dir + "train_captions.json") as f:
+        train_captions = json.load(f)
+
+    f = open(train_dir + "train_images_as_vector.pkl", "rb")
+    train_images_as_vector = pickle.load(f)
+    f.close()
+
+    return train_captions, train_images_as_vector
 
 
 def preprocess_images(images_dir_path, train_images_name):

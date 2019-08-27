@@ -5,9 +5,11 @@ import sys
 import logging
 import traceback
 
+from keras.engine.saving import load_model, save_model
+
 from model import COCODataset, FlickrDataset, Dataset, create_NN
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
-    predict_caption, store_vocabulary, load_vocabulary, data_generator, clean_captions
+    predict_caption, store_vocabulary, load_vocabulary, data_generator, clean_captions, load_train_data, store_train_data
 from keras.callbacks import ModelCheckpoint
 
 import tensorflow as tf
@@ -19,8 +21,10 @@ current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 data_dir = current_work_dir + "/data/"
 vocabulary_dir = data_dir + "vocabulary/"
 weights_dir = data_dir + "weights/"
+train_dir = data_dir + "train/"
 
 weights_file = weights_dir + "weights.h5"
+model_file = train_dir + "model.h5"
 
 
 def usage():
@@ -44,46 +48,49 @@ def usage_predict():
 
 
 def train(dataset, num_training_examples):
-    captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
+    if os.path.isdir(train_dir):
+        print("RESUME LAST TRAINING")
+        vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(vocabulary_dir)
+        model = load_model(model_file)
+        train_captions, train_images_as_vector = load_train_data(train_dir)
 
-    train_captions = Dataset.load_train_captions(dataset, num_training_examples)
-    train_captions = clean_captions(train_captions)
-    train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
-    train_captions = add_start_end_token(train_captions)
-    train_captions_list = to_captions_list(train_captions)
+    else:
+        print("START NEW TRAINING")
+        captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
-    max_cap_len = max(len(d.split()) for d in train_captions_list)
+        train_captions = Dataset.load_train_captions(dataset, num_training_examples)
+        train_captions = clean_captions(train_captions)
+        train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
+        train_captions = add_start_end_token(train_captions)
+        train_captions_list = to_captions_list(train_captions)
 
-    vocabulary = generate_vocabulary(train_captions_list)
-    print("VOCABULARY SIZE: " + str(len(vocabulary)))
-    print("MAX CAPTION LENGTH: " + str(max_cap_len))
-    vocabulary.append("0")
+        max_cap_len = max(len(d.split()) for d in train_captions_list)
 
-    index_word_dict = {}
-    word_index_dict = {}
-    i = 1
-    for w in vocabulary:
-        word_index_dict[w] = i
-        index_word_dict[i] = w
-        i += 1
+        vocabulary = generate_vocabulary(train_captions_list)
+        print("VOCABULARY SIZE: " + str(len(vocabulary)))
+        print("MAX CAPTION LENGTH: " + str(max_cap_len))
+        vocabulary.append("0")
 
-    store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
+        index_word_dict = {}
+        word_index_dict = {}
+        i = 1
+        for w in vocabulary:
+            word_index_dict[w] = i
+            index_word_dict[i] = w
+            i += 1
 
-    train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
+        store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
+        train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
 
-    model = create_NN(len(vocabulary), max_cap_len)
+        print(type(list(train_captions.keys())[0]))
+        print(type(list(train_images_as_vector.keys())[0]))
+
+        store_train_data(train_dir, train_captions, train_images_as_vector)
+
+        model = create_NN(len(vocabulary), max_cap_len)
+        save_model(model, model_file)
 
     model.summary()
-
-    if os.path.isfile(weights_file):
-        try:
-            model.load_weights(weights_file)
-            print("LOAD PRE-TRAINED WEIGHTS OK")
-
-        except:
-            print("IMPOSSIBLE TO LOAD PRE-TRAINED WEIGHTS")
-            # traceback.print_exc()
-            pass
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -97,6 +104,7 @@ def train(dataset, num_training_examples):
     # save_weights_callback = ModelCheckpoint(weights_dir + "weights-epoch_{epoch:03d}.h5", monitor='val_acc',save_weights_only=True, verbose=1, mode='auto',period=1)
 
     save_weights_callback = ModelCheckpoint(weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
+    save_model_callback = ModelCheckpoint(model_file, verbose=1, mode='auto', period=1)
 
     num_images_per_batch = 32
     steps = len(train_captions)
@@ -104,19 +112,20 @@ def train(dataset, num_training_examples):
     generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                len(vocabulary), num_images_per_batch)
 
-    history = model.fit_generator(generator, epochs=5, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback])
+    history = model.fit_generator(generator, epochs=5, steps_per_epoch=steps, verbose=1, callbacks=[save_weights_callback, save_model_callback])
 
     loss = history.history['loss'][-1]
     acc = history.history['acc'][-1]
 
     print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
 
-    if not os.path.isdir(weights_dir):
-        os.makedirs(weights_dir)
-
     print("SAVING WEIGHTS TO " + weights_file)
 
     model.save_weights(weights_file, True)
+
+    if os.path.isdir(train_dir):
+        os.system("rm -rf " + train_dir)
+
     return history
 
 
