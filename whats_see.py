@@ -159,13 +159,12 @@ def train(dataset, num_tran_examples, num_val_examples):
     val_images_as_vector = preprocess_images(images_dir_path, val_images_name_list)
 
     # store vocabulary, train and val data
+    store_vocabulary(vocabulary_dir,vocabulary, word_index_dict, index_word_dict, max_cap_len)
+    store_train_data(train_dir, train_captions, train_images_as_vector)
+    store_val_data(train_dir, val_captions, val_images_as_vector)
+    save_model(model, model_file)
     with open(dataset_name_file, "w") as f:
         f.write(dataset.get_name())
-
-    store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len)
-    store_train_data(train_dir, train_captions, train_images_as_vector)
-    save_model(model, model_file)
-    store_val_data(train_dir, val_captions, val_images_as_vector)
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 

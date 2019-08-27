@@ -75,7 +75,7 @@ def generate_vocabulary(all_captions_list):
     return list(set(vocabulary))
 
 
-def store_vocabulary(vocabulary, word_index_dict, index_word_dict, vocabulary_dir, max_cap_len):
+def store_vocabulary(vocabulary_dir, vocabulary, word_index_dict, index_word_dict, max_cap_len):
     print("STORE VOCABULARY")
 
     if not os.path.isdir(vocabulary_dir):
@@ -145,6 +145,7 @@ def load_train_data(train_dir):
 
     return train_captions, train_images_as_vector
 
+
 def store_val_data(train_dir, val_captions, val_images_as_vector):
     print("STORE VAL DATA")
 
@@ -158,6 +159,7 @@ def store_val_data(train_dir, val_captions, val_images_as_vector):
     pickle.dump(val_images_as_vector, f)
     f.close()
 
+
 def load_val_data(train_dir):
     print("LOAD VAL DATA")
 
@@ -169,6 +171,7 @@ def load_val_data(train_dir):
     f.close()
 
     return val_captions, val_images_as_vector
+
 
 def preprocess_images(images_dir_path, train_images_name):
     print("PROCESSING IMAGES")
