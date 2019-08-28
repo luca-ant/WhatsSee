@@ -90,7 +90,6 @@ class WhatsSee():
             # load vocabulary, train and val data
             vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(self.vocabulary_dir)
             model = load_model(self.model_file)
-            
             train_captions, train_images_as_vector = load_train_data(self.train_dir)
             val_captions, val_images_as_vector = load_val_data(self.train_dir)
 
