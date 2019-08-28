@@ -252,33 +252,3 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
                 yield [[np.array(x_image), np.array(x_text)], np.array(y_caption)]
                 x_text, x_image, y_caption = list(), list(), list()
                 n = 0
-
-
-def predict_caption(model, image_name, max_cap_len, word_index_dict, index_word_dict):
-    modelvgg = VGG16(include_top=True)
-
-    modelvgg.layers.pop()
-    modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)
-
-    img = image.load_img(image_name, target_size=(224, 224, 3))
-
-    img = image.img_to_array(img)
-
-    img = preprocess_input(img)
-    img = modelvgg.predict(img.reshape((1,) + img.shape[:3]))
-
-    in_text = 'start_seq'
-    for i in range(max_cap_len):
-        sequence = [word_index_dict[w] for w in in_text.split() if w in word_index_dict]
-        sequence = pad_sequences([sequence], maxlen=max_cap_len)
-        yhat = model.predict([img, sequence], verbose=0)
-        yhat = np.argmax(yhat)
-        word = index_word_dict[yhat]
-        in_text += ' ' + word
-        if word == 'end_seq':
-            break
-    caption = in_text.split()
-    caption = caption[1:-1]
-    caption = ' '.join(caption)
-
-    return caption

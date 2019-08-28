@@ -1,17 +1,22 @@
 #!/usr/bin/python
 import os
+import shutil
 import sys
 import logging
 import traceback
-
-from keras.engine.saving import load_model, save_model
+import numpy as np
 
 from model import Dataset, create_NN
-from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, \
-    predict_caption, store_vocabulary, load_vocabulary, data_generator, clean_captions, load_train_data, store_train_data, store_val_data, load_val_data
+from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, store_vocabulary, load_vocabulary, data_generator, \
+    clean_captions, load_train_data, store_train_data, store_val_data, load_val_data
+from keras.engine.saving import load_model, save_model
 from keras.callbacks import ModelCheckpoint, Callback
-
+from keras import models
+from keras.applications import VGG16
+from keras.applications.vgg16 import preprocess_input
+from keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
+from tensorflow.python.keras.preprocessing import image
 
 tf.get_logger().setLevel(logging.ERROR)
 
@@ -43,6 +48,7 @@ class WhatsSee():
             raise Exception("WhatsSee class is a singleton! Use WhatsSee.get_instance()")
         else:
             self.last_epoch = 0
+            self.batch_size = 16
             self.data_dir = working_dir + "/data/"
             self.vocabulary_dir = self.data_dir + "vocabulary/"
             self.weights_dir = self.data_dir + "weights/"
@@ -76,80 +82,6 @@ class WhatsSee():
     """
 
     def process_raw_data(self):
-        return
-
-    def save_data_on_disk(self):
-        return
-
-    def load_data_from_disk(self):
-        return
-
-    def start_train(self):
-        return
-
-    def resume(self):
-        if os.path.isdir(self.train_dir):
-            print("RESUME LAST TRAINING")
-
-            # load dataset name
-            with open(self.dataset_name_file, "r") as f:
-                dataset_name = f.readline().strip()
-            dataset = Dataset.create_dataset(dataset_name, self.data_dir)
-
-            # load last epoch number
-            with open(self.epoch_file, "r") as f:
-                self.last_epoch = int(f.readline().strip())
-
-            # load vocabulary, train and val data
-            vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(self.vocabulary_dir)
-            model = load_model(self.model_file)
-            train_captions, train_images_as_vector = load_train_data(self.train_dir)
-            val_captions, val_images_as_vector = load_val_data(self.train_dir)
-
-            model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-            if not os.path.isdir(self.weights_dir):
-                os.makedirs(self.weights_dir)
-
-            # callbacks
-            save_weights_callback = ModelCheckpoint(self.weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
-            save_epoch_callback = EpochSaver(self.last_epoch + 1, self.epoch_file)
-            save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
-
-            # params
-            batch_size = 16
-            steps_train = (len(train_captions) // batch_size) + 1
-            steps_val = (len(val_captions) // batch_size) + 1
-            model.summary()
-
-            # prepare train and val data generator
-            train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
-            val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
-
-            print("TRAINING MODEL")
-            history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
-                                          validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
-                                          initial_epoch=self.last_epoch)
-
-            loss = history.history['loss'][-1]
-            acc = history.history['acc'][-1]
-
-            print("SAVING WEIGHTS TO " + self.weights_file)
-
-            model.save_weights(self.weights_file, True)
-            print("TRAINING COMPLETE!")
-            print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
-
-            return history
-
-        else:
-            print("LAST TRAINING DATA NOT FOUND")
-
-    def train(self, dataset, num_train_examples, num_val_examples):
-        print("START NEW TRAINING")
-        1
-        if os.path.isdir(self.train_dir):
-            os.system("rm -rf " + self.train_dir)
 
         captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
@@ -157,95 +89,180 @@ class WhatsSee():
         train_captions = Dataset.load_train_captions(dataset, num_train_examples)
         train_captions = clean_captions(train_captions)
         train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
-        train_captions = add_start_end_token(train_captions)
+        self.train_captions = add_start_end_token(train_captions)
         train_captions_list = to_captions_list(train_captions)
 
         val_captions = Dataset.load_val_captions(dataset, num_val_examples)
         val_captions = clean_captions(val_captions)
         val_images_name_list = Dataset.load_images_name(dataset, val_captions.keys())
-        val_captions = add_start_end_token(val_captions)
+        self.val_captions = add_start_end_token(val_captions)
 
         # generate vocabulary
-        max_cap_len = max(len(d.split()) for d in train_captions_list)
-        vocabulary = generate_vocabulary(train_captions_list)
-        print("VOCABULARY SIZE: " + str(len(vocabulary)))
-        print("MAX CAPTION LENGTH: " + str(max_cap_len))
-        vocabulary.append("0")
-        index_word_dict = {}
-        word_index_dict = {}
+        self.max_cap_len = max(len(d.split()) for d in train_captions_list)
+        self.vocabulary = generate_vocabulary(train_captions_list)
+        print("VOCABULARY SIZE: " + str(len(self.vocabulary)))
+        print("MAX CAPTION LENGTH: " + str(self.max_cap_len))
+        self.vocabulary.append("0")
+        self.index_word_dict = {}
+        self.word_index_dict = {}
         i = 1
-        for w in vocabulary:
-            word_index_dict[w] = i
-            index_word_dict[i] = w
+        for w in self.vocabulary:
+            self.word_index_dict[w] = i
+            self.index_word_dict[i] = w
             i += 1
 
-        model = create_NN(len(vocabulary), max_cap_len)
+        self.model = create_NN(len(self.vocabulary), self.max_cap_len)
 
         # load images from dataset
-        train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
-        val_images_as_vector = preprocess_images(images_dir_path, val_images_name_list)
+        self.train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
+        self.val_images_as_vector = preprocess_images(images_dir_path, val_images_name_list)
 
+        return
+
+    def save_data_on_disk(self):
         # store vocabulary, train and val data
-        store_vocabulary(self.vocabulary_dir, vocabulary, word_index_dict, index_word_dict, max_cap_len)
-        store_train_data(self.train_dir, train_captions, train_images_as_vector)
-        store_val_data(self.train_dir, val_captions, val_images_as_vector)
-        save_model(model, self.model_file)
+        store_vocabulary(self.vocabulary_dir, self.vocabulary, self.word_index_dict, self.index_word_dict, self.max_cap_len)
+        store_train_data(self.train_dir, self.train_captions, self.train_images_as_vector)
+        store_val_data(self.train_dir, self.val_captions, self.val_images_as_vector)
+        save_model(self.model, self.model_file)
         with open(self.dataset_name_file, "w") as f:
             f.write(dataset.get_name())
         with open(self.epoch_file, "w") as f:
             f.write(str(self.last_epoch))
 
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        return
+
+    def load_data_from_disk(self):
+
+        # load dataset name
+        with open(self.dataset_name_file, "r") as f:
+            dataset_name = f.readline().strip()
+        self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
+
+        # load last epoch number
+        with open(self.epoch_file, "r") as f:
+            self.last_epoch = int(f.readline().strip())
+
+        # load vocabulary, train and val data
+        self.vocabulary, self.word_index_dict, self.index_word_dict, self.max_cap_len = load_vocabulary(self.vocabulary_dir)
+        self.model = load_model(self.model_file)
+        self.train_captions, self.train_images_as_vector = load_train_data(self.train_dir)
+        self.val_captions, self.val_images_as_vector = load_val_data(self.train_dir)
+
+        return
+
+    def start_train(self):
+        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
         if not os.path.isdir(self.weights_dir):
             os.makedirs(self.weights_dir)
 
         # callbacks
         save_weights_callback = ModelCheckpoint(self.weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
-        save_epoch_callback = EpochSaver(1, self.epoch_file)
+        save_epoch_callback = EpochSaver(self.last_epoch + 1, self.epoch_file)
         save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
         # params
-        batch_size = 16
-        steps_train = (len(train_captions) // batch_size) + 1
-        steps_val = (len(val_captions) // batch_size) + 1
-        model.summary()
+        steps_train = (len(self.train_captions) // self.batch_size) + 1
+        steps_val = (len(self.val_captions) // self.batch_size) + 1
+        self.model.summary()
 
         # prepare train and val data generator
-        train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
-        val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
+        train_data_generator = data_generator(self.dataset, self.train_captions, self.train_images_as_vector, self.word_index_dict, self.max_cap_len,
+                                              len(self.vocabulary), self.batch_size)
+        val_data_generator = data_generator(self.dataset, self.val_captions, self.val_images_as_vector, self.word_index_dict, self.max_cap_len, len(self.vocabulary),
+                                            self.batch_size)
 
         print("TRAINING MODEL")
-        history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
-                                      validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
-                                      initial_epoch=self.last_epoch)
+        history = self.model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
+                                           validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
+                                           initial_epoch=self.last_epoch)
 
         loss = history.history['loss'][-1]
         acc = history.history['acc'][-1]
 
         print("SAVING WEIGHTS TO " + self.weights_file)
 
-        model.save_weights(self.weights_file, True)
+        self.model.save_weights(self.weights_file, True)
         print("TRAINING COMPLETE!")
         print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
 
         return history
 
+    def restore_nn(self):
+        self.vocabulary, self.word_index_dict, self.index_word_dict, self.max_cap_len = load_vocabulary(self.vocabulary_dir)
+
+        print("VOCABULARY SIZE: " + str(len(self.vocabulary)))
+        print("MAX CAPTION LENGTH: " + str(self.max_cap_len))
+
+        self.model = create_NN(len(self.vocabulary), self.max_cap_len)
+
+        self.model.load_weights(self.weights_file)
+
+        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.model.summary()
+
+    def predict_caption(model, image_name, max_cap_len, word_index_dict, index_word_dict):
+        modelvgg = VGG16(include_top=True)
+
+        modelvgg.layers.pop()
+        modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)
+
+        img = image.load_img(image_name, target_size=(224, 224, 3))
+
+        img = image.img_to_array(img)
+
+        img = preprocess_input(img)
+        img = modelvgg.predict(img.reshape((1,) + img.shape[:3]))
+
+        in_text = 'start_seq'
+        for i in range(max_cap_len):
+            sequence = [word_index_dict[w] for w in in_text.split() if w in word_index_dict]
+            sequence = pad_sequences([sequence], maxlen=max_cap_len)
+            yhat = model.predict([img, sequence], verbose=0)
+            yhat = np.argmax(yhat)
+            word = index_word_dict[yhat]
+            in_text += ' ' + word
+            if word == 'end_seq':
+                break
+        caption = in_text.split()
+        caption = caption[1:-1]
+        caption = ' '.join(caption)
+
+        return caption
+
+    def resume(self):
+        if os.path.isdir(self.train_dir):
+            print("RESUME LAST TRAINING")
+
+            self.load_data_from_disk()
+
+            self.start_train()
+
+
+        else:
+            print("LAST TRAINING DATA NOT FOUND")
+
+    def train(self, dataset, num_train_examples, num_val_examples):
+        print("START NEW TRAINING")
+
+        if os.path.isdir(self.train_dir):
+            # os.system("rm -rf " + self.train_dir)
+            shutil.rmtree(self.train_dir, ignore_errors=True)
+
+        self.process_raw_data()
+
+        self.save_data_on_disk()
+
+        self.start_train()
+
     def predict(self, image_name):
-        vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(self.vocabulary_dir)
 
-        print("VOCABULARY SIZE: " + str(len(vocabulary)))
-        print("MAX CAPTION LENGTH: " + str(max_cap_len))
+        if self.model == None:
+            self.restore_nn()
 
-        model = create_NN(len(vocabulary), max_cap_len)
-
-        model.load_weights(self.weights_file)
-
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        model.summary()
-
-        predicted_caption = predict_caption(model, image_name, max_cap_len,
-                                            word_index_dict, index_word_dict)
+        predicted_caption = self.predict_caption(self.model, image_name, self.max_cap_len,
+                                                 self.word_index_dict, self.index_word_dict)
 
         print(predicted_caption)
 
