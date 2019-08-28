@@ -226,7 +226,7 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
                    num_photos_per_batch):
     x_text, x_image, y_caption = list(), list(), list()
     n = 0
-    while 1:
+    while True:
 
         for image_id, cap_list in train_captions.items():
             n += 1

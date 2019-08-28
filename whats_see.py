@@ -110,10 +110,9 @@ class WhatsSee():
             model.summary()
 
             # prepare train and val data generator
-            train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
-                                                  len(vocabulary), batch_size)
-            val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len,
-                                                len(vocabulary), batch_size)
+            train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
+            val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
+
             print("TRAINING MODEL")
             history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
                                           validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
@@ -202,10 +201,9 @@ class WhatsSee():
         print(sys.getsizeof(val_images_as_vector))
 
         # prepare train and val data generator
-        train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
-                                              len(vocabulary), batch_size)
-        val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len,
-                                            len(vocabulary), batch_size)
+        train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
+        val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
+
         print("TRAINING MODEL")
         history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
                                       validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback])
@@ -276,14 +274,13 @@ if __name__ == "__main__":
 
     # default values
     dataset_name = "flickr"
-    num_train_examples = 0
-    num_val_examples = 0
+    num_train_examples = 6000
+    num_val_examples = 1000
     image_file_name = ""
 
     # read args
     if mode == "train":
         num_args = 2 + (2 * 3)
-        num_train_examples = 6000
         num_args = min(num_args, len(sys.argv))
         #        if len(sys.argv) < num_args:
         #            usage_train()
