@@ -7,8 +7,10 @@ import whats_see
 
 PORT = 8888
 
-whats_see.current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
+
+ws = whats_see.WhatsSee(current_work_dir)
 
 class WhatsSeeHandler(BaseHTTPRequestHandler):
 

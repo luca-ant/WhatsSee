@@ -28,7 +28,36 @@ class EpochSaver(Callback):
 
 
 class WhatsSee():
+    __instance = None
 
+    @staticmethod
+    def get_instance():
+
+        if WhatsSee.__instance == None:
+            WhatsSee(".")
+        return WhatsSee.__instance
+
+    def __init__(self, current_work_dir):
+        # private constructor
+        if WhatsSee.__instance != None:
+            raise Exception("WhatsSee class is a singleton! Use WhatsSee.get_instance()")
+        else:
+            self.data_dir = current_work_dir + "/data/"
+            self.vocabulary_dir = self.data_dir + "vocabulary/"
+            self.weights_dir = self.data_dir + "weights/"
+            self.train_dir = self.data_dir + "train/"
+
+            self.weights_file = self.weights_dir + "weights.h5"
+            self.model_file = self.train_dir + "model.h5"
+            self.dataset_name_file = self.train_dir + "dataset_name.txt"
+            self.epoch_file = self.train_dir + "last_epoch.txt"
+
+            if not os.path.isdir(self.data_dir):
+                os.makedirs(self.data_dir)
+
+            WhatsSee.__instance = self
+
+    """
     def __init__(self, current_work_dir):
 
         self.data_dir = current_work_dir + "/data/"
@@ -43,6 +72,7 @@ class WhatsSee():
 
         if not os.path.isdir(self.data_dir):
             os.makedirs(self.data_dir)
+    """
 
     def resume(self):
         if os.path.isdir(self.train_dir):
