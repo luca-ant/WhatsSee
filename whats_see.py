@@ -42,6 +42,7 @@ class WhatsSee():
         if WhatsSee.__instance != None:
             raise Exception("WhatsSee class is a singleton! Use WhatsSee.get_instance()")
         else:
+            self.last_epoch = 0
             self.data_dir = working_dir + "/data/"
             self.vocabulary_dir = self.data_dir + "vocabulary/"
             self.weights_dir = self.data_dir + "weights/"
@@ -74,6 +75,18 @@ class WhatsSee():
             os.makedirs(self.data_dir)
     """
 
+    def process_raw_data(self):
+        return
+
+    def save_data_on_disk(self):
+        return
+
+    def load_data_from_disk(self):
+        return
+
+    def start_train(self):
+        return
+
     def resume(self):
         if os.path.isdir(self.train_dir):
             print("RESUME LAST TRAINING")
@@ -85,7 +98,7 @@ class WhatsSee():
 
             # load last epoch number
             with open(self.epoch_file, "r") as f:
-                last_epoch = int(f.readline().strip())
+                self.last_epoch = int(f.readline().strip())
 
             # load vocabulary, train and val data
             vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(self.vocabulary_dir)
@@ -100,7 +113,7 @@ class WhatsSee():
 
             # callbacks
             save_weights_callback = ModelCheckpoint(self.weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
-            save_epoch_callback = EpochSaver(last_epoch + 1, self.epoch_file)
+            save_epoch_callback = EpochSaver(self.last_epoch + 1, self.epoch_file)
             save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
             # params
@@ -116,7 +129,7 @@ class WhatsSee():
             print("TRAINING MODEL")
             history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
                                           validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
-                                          initial_epoch=last_epoch)
+                                          initial_epoch=self.last_epoch)
 
             loss = history.history['loss'][-1]
             acc = history.history['acc'][-1]
@@ -131,7 +144,6 @@ class WhatsSee():
 
         else:
             print("LAST TRAINING DATA NOT FOUND")
-            exit(3)
 
     def train(self, dataset, num_train_examples, num_val_examples):
         print("START NEW TRAINING")
@@ -181,7 +193,7 @@ class WhatsSee():
         with open(self.dataset_name_file, "w") as f:
             f.write(dataset.get_name())
         with open(self.epoch_file, "w") as f:
-            f.write(str(0))
+            f.write(str(self.last_epoch))
 
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -193,11 +205,11 @@ class WhatsSee():
         save_epoch_callback = EpochSaver(1, self.epoch_file)
         save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
+        # params
         batch_size = 16
         steps_train = (len(train_captions) // batch_size) + 1
         steps_val = (len(val_captions) // batch_size) + 1
         model.summary()
-
 
         # prepare train and val data generator
         train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
@@ -205,7 +217,8 @@ class WhatsSee():
 
         print("TRAINING MODEL")
         history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
-                                      validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback])
+                                      validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
+                                      initial_epoch=self.last_epoch)
 
         loss = history.history['loss'][-1]
         acc = history.history['acc'][-1]
