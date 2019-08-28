@@ -223,7 +223,7 @@ def prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, v
 
 
 def data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, vocab_size,
-                   num_photos_per_batch):
+                   bath_size):
     x_text, x_image, y_caption = list(), list(), list()
     n = 0
     while True:
@@ -248,7 +248,7 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
                     y_caption.append(out_text)
                     x_image.append(image)
 
-            if n == num_photos_per_batch:
+            if n == bath_size:
                 yield [[np.array(x_image), np.array(x_text)], np.array(y_caption)]
                 x_text, x_image, y_caption = list(), list(), list()
                 n = 0

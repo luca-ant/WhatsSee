@@ -104,7 +104,7 @@ class WhatsSee():
             save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
             # params
-            batch_size = 32
+            batch_size = 16
             steps_train = (len(train_captions) // batch_size) + 1
             steps_val = (len(val_captions) // batch_size) + 1
             model.summary()
@@ -193,12 +193,11 @@ class WhatsSee():
         save_epoch_callback = EpochSaver(1, self.epoch_file)
         save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
-        batch_size = 32
+        batch_size = 16
         steps_train = (len(train_captions) // batch_size) + 1
         steps_val = (len(val_captions) // batch_size) + 1
         model.summary()
-        print(sys.getsizeof(train_images_as_vector))
-        print(sys.getsizeof(val_images_as_vector))
+
 
         # prepare train and val data generator
         train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len, len(vocabulary), batch_size)
