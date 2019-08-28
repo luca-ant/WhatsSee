@@ -1,6 +1,7 @@
 .idea/
 *.log
 *.pyc
+venv/
 __pycache__/
 data/coco_dataset/
 data/flickr_dataset/

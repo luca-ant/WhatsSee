@@ -104,7 +104,7 @@ class WhatsSee():
             save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
             # params
-            batch_size = 16
+            batch_size = 32
             steps = (len(train_captions) // batch_size) + 1
             model.summary()
 
@@ -190,7 +190,7 @@ class WhatsSee():
         save_epoch_callback = EpochSaver(1, self.epoch_file)
         save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
-        batch_size = 16
+        batch_size = 32
         steps = (len(train_captions) // batch_size) + 1
 
         model.summary()

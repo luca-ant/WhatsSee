@@ -195,13 +195,13 @@ def preprocess_images(images_dir_path, train_images_name_list):
     return images_as_vector
 
 
-def prepare_data(dataset, eval_captions, eval_images_as_vector, word_index_dict, vocab_size, max_cap_len):
+def prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, vocab_size, max_cap_len):
     x_text, x_image, y_caption = [], [], []
 
-    for image_id, cap_list in eval_captions.items():
+    for image_id, cap_list in val_captions.items():
 
         image_name = Dataset.get_image_name(dataset, image_id)
-        image = eval_images_as_vector[image_name]
+        image = val_images_as_vector[image_name]
 
         for c in cap_list:
             int_seq = [word_index_dict[word] for word in c.split(' ') if word in word_index_dict]
