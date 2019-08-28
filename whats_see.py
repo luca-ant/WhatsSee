@@ -90,6 +90,7 @@ class WhatsSee():
             # load vocabulary, train and val data
             vocabulary, word_index_dict, index_word_dict, max_cap_len = load_vocabulary(self.vocabulary_dir)
             model = load_model(self.model_file)
+            
             train_captions, train_images_as_vector = load_train_data(self.train_dir)
             val_captions, val_images_as_vector = load_val_data(self.train_dir)
 
@@ -109,8 +110,7 @@ class WhatsSee():
             steps_val = (len(val_captions) // batch_size) + 1
             model.summary()
 
-            # prepare train and val data
-            x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
+            # prepare train and val data generator
             train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                                   len(vocabulary), batch_size)
             val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len,
@@ -201,8 +201,8 @@ class WhatsSee():
         model.summary()
         print(sys.getsizeof(train_images_as_vector))
         print(sys.getsizeof(val_images_as_vector))
-        # prepare train and val data
-        x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
+
+        # prepare train and val data generator
         train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
                                               len(vocabulary), batch_size)
         val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len,
