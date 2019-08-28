@@ -269,11 +269,8 @@ class WhatsSee():
 
         if self.model == None:
             self.restore_nn()
-
         predicted_caption = self.predict_caption(image_name)
-
         print(predicted_caption)
-
         return predicted_caption
 
 

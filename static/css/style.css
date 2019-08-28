@@ -51,7 +51,7 @@ h2 {
 hr.botm-line {
     height: 3px;
     width: 60px;
-    background: #ffb737;
+    background: #378eff;
     position: relative;
     border: 0;
     margin: 20px 0 20px 0;
@@ -87,8 +87,9 @@ banner
 }
 
 .navbar-brand img {
-    padding-top: 2px;
-    width: 120px !important;
+    padding-top: 1px;
+    width: 90px !important;
+    height:50px;
 }
 
 .navbar-default .navbar-brand, .navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
@@ -144,6 +145,7 @@ banner
 	background: url('../img/bg-banner.jpg') no-repeat fixed;
 	background-size: cover;
 	min-height: 650px;
+
 	position: relative;
 }
 .bg-color{
@@ -151,10 +153,11 @@ banner
 	min-height: 650px;
 }
 .banner-info{
-	padding-top: 190px;
+	padding-top: 130px;
 }
 .banner-logo img{
 	display: inline-block;
+	height: 170px;
 }
 .banner-text{
 	color: #fff;
@@ -165,8 +168,18 @@ banner
 	text-transform: uppercase;
 	padding-bottom:15px;
 }
+.button{
+
+	margin-bottom: 20px;
+	padding: 10px 20px;
+	font-size: 12px;
+	background-color: rgba(12, 184, 182, 0.91);
+	border-radius: 3px;
+	color: #fff;
+}
 .btn-appoint, .btn-appoint:hover, .btn-appoint:focus{
 	margin-top: 30px;
+	margin-left: 20px;
 	padding: 10px 20px;
 	font-size: 12px;
 	background-color: rgba(12, 184, 182, 0.91);
@@ -201,43 +214,6 @@ services
 }
 .icon-info p{
 	font-size: 15px !important;
-}
-/***************************************
-cta-1
-***************************************/
-.schedule-tab {
-	background-color: #0CB8B6;
-	float: left;
-}
-.medi-info{
-	border-right: 1px solid #fff;
-}
-.medi-info, .time-info{
-	padding: 20px;
-	color: #fff;
-}
-.medi-info h3, .time-info h3{
-	padding-bottom: 16px;
-	color: #fff;
-	font-weight: 600;
-}
-.medi-info-btn, .medi-info-btn:hover, .medi-info-btn:focus {
-    margin: 15px 0px 5px;
-    display: inline-block;
-    border: solid white 2px;
-    padding: 3px 8px;
-    font-size: 12px;
-    color: #fff;
-    font-weight: 400 !important;
-    cursor: pointer;
-}
-td {
-    border: 0px solid #ededed;
-    border-top: 1px solid rgba(216, 216, 216, 0.5);
-    padding: 6px 10px 6px 0;
-}
-.medi-info, .time-info{
-    font-size: 14px;
 }
 /***************************************
 about
@@ -275,17 +251,12 @@ about
 .sec-para{
 	padding-bottom: 10px;
 }
-/***************************************
-doctor team
-***************************************/
-.thumbnail {
-	border-radius: 0px;
+
+#log{
+    overflow-y: scroll;
+    resize: none;
 }
-.caption h3{
-    padding-bottom: 5px;
 }
-.caption p{
-    padding-bottom: 10px;
 }
 /***************************************
 testimonial
@@ -352,82 +323,6 @@ testimonial
     box-shadow: 3px -13px 5px 0px rgba(0, 0, 0, 0.18);
     border-left: 0;
 }
-/***************************************
-cta -2
-***************************************/
-#cta-2{
-	background-color: rgb(41, 48, 46);
-}
-.white{
-	color: #fff;
-}
-.icon-play, .icon-play:hover, .icon-play:focus{
-	background-color: #0CB8B6;
-	padding: 5px 10px;
-	color: #fff;
-	text-decoration: none;
-	padding: 5px 17px;
-	margin-top: 26px;
-	display: block;
-}
-.text-primary {
-    color: #0cb8b6;
-}
-.icon-mar
-{
-	margin-right: 7px;
-}
-/***************************************
-contact us
-***************************************/
-.space {
-    margin-top: 40px;
-}
-.btn-form, .btn-form:hover, .btn-form:focus {
-    background-color: #0cb8b6;
-    color: #fff;
-    border-radius: 0px;
-    padding: 10px 20px;
-}
-.br-radius-zero {
-    border-radius: 0px;
-}
-.form-control{
-	height: 40px;
-}
-
-.validation {
-    color: red;
-    display:none;
-    margin: 0 0 20px;
-    font-weight:400;
-    font-size:13px;
-}
-
-#sendmessage {
-    color: green;
-    border:1px solid green;
-    display:none;
-    text-align:center;
-    padding:15px;
-    font-weight:600;
-    margin-bottom:15px;
-}
-
-#errormessage {
-    color: red;
-    display:none;
-    border:1px solid red;
-    text-align:center;
-    padding:15px;
-    font-weight:600;
-    margin-bottom:15px;
-}
-
-#sendmessage.show, #errormessage.show, .show {
-	display:block;
-}
-
 
 /***************************************
 footer
@@ -498,7 +393,7 @@ footer
     }
     .marb20{
         margin-top: 30px;
-    }
+
     h2{
         font-size: 24px;
         line-height: 1.2;

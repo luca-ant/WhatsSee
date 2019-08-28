@@ -1,16 +1,230 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
+<html lang="en">
+
+<head>
     <meta charset="utf-8">
-    <title>Flask Tutorial</title>
-  </head>
-  <body>
-    {% extends "template.html" %}
-    {% block content %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WhatsSee</title>
+    <link rel="shortcut icon" type="image/x-icon" href="static/img/logo.ico" />
 
-    <h1> My First Try Using Flask </h1>
-    <p> Flask is Fun </p>
+    <meta name="description" content="Free Bootstrap Theme by BootstrapMade.com">
+    <meta name="keywords" content="free website templates, free bootstrap themes, free template, free bootstrap, free website template">
 
-    {% endblock %}
-  </body>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans|Raleway|Candal">
+    <link rel="stylesheet" type="text/css" href="static/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="static/css/style.css">
+
+</head>
+
+<body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="60">
+<!--banner-->
+<section id="banner" class="banner">
+    <div class="bg-color">
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="col-md-12">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="#"><img src="static/img/logo.png" class="img-responsive" style="width: 140px; margin-top: -16px;"></a>
+                    </div>
+                    <div class="collapse navbar-collapse navbar-right" id="myNavbar">
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="#banner">Home</a></li>
+                            <li class=""><a href="#service">Training</a></li>
+                            <li class=""><a href="#testimonial">Generate caption</a></li>
+                            <li class=""><a href="#footer">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <div class="banner-info">
+                    <div class="banner-logo text-center">
+                        <img src="static/img/logo.png" class="img-responsive">
+                    </div>
+                    <div class="banner-text text-center">
+                        <h1 class="white">Whatsee</h1>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod <br>tempor incididunt ut labore et dolore magna aliqua.</p>
+                        <a href="#testimonial" class="btn btn-appoint">GENERATE A CAPTION NOW!</a>
+                    </div>
+                    <div class="overlay-detail text-center">
+                        <a href="#service"><i class="fa fa-angle-down"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/ banner-->
+<!--service-->
+<section id="service" class="section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-sm-4">
+                <h2 class="ser-title">TRAINING</h2>
+                <hr class="botm-line">
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+                    quis nostrud exercitation ullamco laboris cillum.</p>
+            </div>
+            <div class="col-md-4 col-sm-4">
+                <form action="" class="contactForm">
+                    <div class="form-group">
+                        Dataset:
+                        <select name="dataset_name" class="form-control br-radius-zero" id="dataset_name" required/>
+                        <option value="flickr">Flickr</option>
+                        <option value="coco">COCO</option>
+                        </select>
+
+                    </div>
+                    <div class="form-group">
+                        Training examples number: <input type="number" class="form-control br-radius-zero" value=0 name="num_train_ex" id="num_train_ex"
+                                                         placeholder="Training examples number" required/>
+                    </div>
+                    <div class="form-group">
+                        Validation examples number: <input type="number" class="form-control br-radius-zero" value=0 name="num_val_ex" id="num_val_ex"
+                                                           placeholder="Validation examples number" required/>
+                    </div>
+
+
+                    <div class="form-action">
+                        <button type="submit" id="train_button" class="btn btn-form button">START TRAINING</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4 col-sm-4">
+
+
+                <div class="form-group">
+                    <textarea class="form-control br-radius-zero" id="log" name="log" rows="10" disabled="disabled" placeholder="Logs will be printed here"></textarea>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</section>
+<!--/ service-->
+
+
+<!--testimonial-->
+<section id="testimonial" class="section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-sm-4">
+                <h2 class="ser-title">GENERATE CAPTION</h2>
+                <hr class="botm-line">
+                <p>Select an image to upload and click GENERATE CAPTION!</p>
+            </div>
+            <div class="col-md-4 col-sm-4">
+
+                <form action="" class="contactForm">
+                    Image file:
+                    <div class="form-group">
+                        <div class="input-group input-file" name="Fichier1">
+			<span class="input-group-btn">
+        		<button class="btn btn-default btn-choose" type="button">Choose</button>
+    		</span>
+                            <input type="text" class="form-control" placeholder='Choose a file...'/>
+                            <span class="input-group-btn">
+       			 <button class="btn btn-warning btn-reset" type="button">Reset</button>
+    		</span>
+                        </div>
+                    </div>
+
+
+                    <div class="form-action">
+                        <button type="submit" class="btn btn-form button">GENERATE CAPTION</button>
+                    </div>
+                </form>
+
+                <!--
+                                <div class="service-info">
+                                    <div class="icon">
+                                        <i class="fa fa-stethoscope"></i>
+                                    </div>
+                                    <div class="icon-info">
+                                        <h4>24 Hour Support</h4>
+                                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                                    </div>
+                                </div>
+                                <div class="service-info">
+                                    <div class="icon">
+                                        <i class="fa fa-ambulance"></i>
+                                    </div>
+                                    <div class="icon-info">
+                                        <h4>Emergency Services</h4>
+                                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                                    </div>
+                                </div>
+                -->            </div>
+            <div class="col-md-4 col-sm-4">
+
+                <div class="service-info">
+                    <div class="icon">
+                        <!-- image-->
+                    </div>
+                    <div class="icon-info">
+
+                        <p id="caption"></p>
+                    </div>
+                </div>
+                <div class="service-info">
+
+
+                </div>
+            </div>
+</section>
+<!--/ testimonial-->
+
+
+<!--footer-->
+<footer id="footer">
+    <div class="top-footer">
+        <div class="container">
+            <div class="row">
+
+                <div class="col-md-12 text-center">
+                    <div class="ftr-tle">
+                        <h4 class="white no-padding">About</h4>
+                    </div>
+                    <div class="info-sec">
+                        <p>Praesent convallis tortor et enim laoreet, vel consectetur purus latoque penatibus et dis parturient.</p>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <div class="footer-line">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    © Copyright WhatsSee. All Rights Reserved
+                    <div class="credits">
+
+                        Designed by Luca Antognetti
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<!--/ footer-->
+
+<script src="static/js/jquery.min.js"></script>
+<script src="static/js/jquery.easing.min.js"></script>
+<script src="static/js/bootstrap.min.js"></script>
+<script src="static/js/custom.js"></script>
+<script src="static/js/form.js"></script>
+
+</body>
+
 </html>
