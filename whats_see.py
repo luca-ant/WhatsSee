@@ -105,17 +105,20 @@ class WhatsSee():
 
             # params
             batch_size = 32
-            steps = (len(train_captions) // batch_size) + 1
+            steps_train = (len(train_captions) // batch_size) + 1
+            steps_val = (len(val_captions) // batch_size) + 1
             model.summary()
 
             # prepare train and val data
             x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
-            generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
-                                       len(vocabulary), batch_size)
-
+            train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
+                                                  len(vocabulary), batch_size)
+            val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len,
+                                                len(vocabulary), batch_size)
             print("TRAINING MODEL")
-            history = model.fit_generator(generator, epochs=150, steps_per_epoch=steps, verbose=2, validation_data=([x_val_image, x_val_text], y_val_caption),
-                                          callbacks=[save_weights_callback, save_model_callback, save_epoch_callback], initial_epoch=last_epoch)
+            history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
+                                          validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
+                                          initial_epoch=last_epoch)
 
             loss = history.history['loss'][-1]
             acc = history.history['acc'][-1]
@@ -193,19 +196,20 @@ class WhatsSee():
         save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
         batch_size = 32
-        steps = (len(train_captions) // batch_size) + 1
-
+        steps_train = (len(train_captions) // batch_size) + 1
+        steps_val = (len(val_captions) // batch_size) + 1
         model.summary()
         print(sys.getsizeof(train_images_as_vector))
         print(sys.getsizeof(val_images_as_vector))
         # prepare train and val data
         x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
-        generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
-                                   len(vocabulary), batch_size)
-
+        train_data_generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
+                                              len(vocabulary), batch_size)
+        val_data_generator = data_generator(dataset, val_captions, val_images_as_vector, word_index_dict, max_cap_len,
+                                            len(vocabulary), batch_size)
         print("TRAINING MODEL")
-        history = model.fit_generator(generator, epochs=150, steps_per_epoch=steps, verbose=2, validation_data=([x_val_image, x_val_text], y_val_caption),
-                                      callbacks=[save_weights_callback, save_model_callback, save_epoch_callback])
+        history = model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
+                                      validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback])
 
         loss = history.history['loss'][-1]
         acc = history.history['acc'][-1]
