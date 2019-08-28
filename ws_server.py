@@ -1,7 +1,6 @@
 import sys
 import os
-import http
-from http.server import BaseHTTPRequestHandler, HTTPServer
+
 from flask import Flask, render_template
 
 import whats_see
@@ -15,22 +14,22 @@ app = Flask(__name__)
 ws = whats_see.WhatsSee(working_dir)
 
 
-@app.route("/")
+@app.route("/", methods=['GET'])
 def home():
     return render_template("home.html")
 
 
-@app.route("/train")
+@app.route("/train", methods=['GET'])
 def train():
     return render_template("train.html")
 
 
-@app.route("/resume")
+@app.route("/resume", methods=['GET'])
 def resume():
     return "resume!"
 
 
-@app.route("/predict")
+@app.route("/predict", methods=['GET'])
 def predict():
     return "predict!"
 

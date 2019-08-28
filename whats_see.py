@@ -179,6 +179,8 @@ class WhatsSee():
         save_model(model, self.model_file)
         with open(self.dataset_name_file, "w") as f:
             f.write(dataset.get_name())
+        with open(self.epoch_file, "w") as f:
+            f.write(str(0))
 
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -194,7 +196,8 @@ class WhatsSee():
         steps = (len(train_captions) // batch_size) + 1
 
         model.summary()
-
+        print(sys.getsizeof(train_images_as_vector))
+        print(sys.getsizeof(val_images_as_vector))
         # prepare train and val data
         x_val_text, x_val_image, y_val_caption = prepare_data(dataset, val_captions, val_images_as_vector, word_index_dict, len(vocabulary), max_cap_len)
         generator = data_generator(dataset, train_captions, train_images_as_vector, word_index_dict, max_cap_len,
