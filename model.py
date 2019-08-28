@@ -67,13 +67,13 @@ class Dataset:
         return dataset.load_all_images_name()
 
     @staticmethod
-    def create_dataset(dataset_name):
+    def create_dataset(dataset_name, data_dir):
         import whats_see
 
         if dataset_name == "coco":
-            dataset = COCODataset(whats_see.data_dir)
+            dataset = COCODataset(data_dir)
         elif dataset_name == "flickr":
-            dataset = FlickrDataset(whats_see.data_dir)
+            dataset = FlickrDataset(data_dir)
         return dataset
 
 
