@@ -42,13 +42,12 @@ class WhatsSee():
             WhatsSee(".")
         return WhatsSee.__instance
 
-    def __init__(self, working_dir):
+    def __init__(self, dataset_name, working_dir):
         # private constructor
         if WhatsSee.__instance != None:
             raise Exception("WhatsSee class is a singleton! Use WhatsSee.get_instance()")
         else:
-            self.last_epoch = 0
-            self.batch_size = 16
+
             self.data_dir = working_dir + "/data/"
             self.vocabulary_dir = self.data_dir + "vocabulary/"
             self.weights_dir = self.data_dir + "weights/"
@@ -58,6 +57,20 @@ class WhatsSee():
             self.model_file = self.train_dir + "model.h5"
             self.dataset_name_file = self.train_dir + "dataset_name.txt"
             self.epoch_file = self.train_dir + "last_epoch.txt"
+
+            self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
+            self.last_epoch = 0
+            self.batch_size = 16
+
+            self.model = None
+            self.train_captions = None
+            self.val_captions = None
+            self.train_images_as_vector = None
+            self.val_images_as_vector = None
+            self.vocabulary = None
+            self.word_index_dict = None
+            self.index_word_dict = None
+            self.max_cap_len = None
 
             if not os.path.isdir(self.data_dir):
                 os.makedirs(self.data_dir)
@@ -81,20 +94,20 @@ class WhatsSee():
             os.makedirs(self.data_dir)
     """
 
-    def process_raw_data(self):
+    def process_raw_data(self, num_train_examples, num_val_examples):
 
-        captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
+        captions_file_path, images_dir_path = Dataset.download_dataset(self.dataset)
 
         # load captions from dataset
-        train_captions = Dataset.load_train_captions(dataset, num_train_examples)
+        train_captions = Dataset.load_train_captions(self.dataset, num_train_examples)
         train_captions = clean_captions(train_captions)
-        train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
+        train_images_name_list = Dataset.load_images_name(self.dataset, train_captions.keys())
         self.train_captions = add_start_end_token(train_captions)
         train_captions_list = to_captions_list(train_captions)
 
-        val_captions = Dataset.load_val_captions(dataset, num_val_examples)
+        val_captions = Dataset.load_val_captions(self.dataset, num_val_examples)
         val_captions = clean_captions(val_captions)
-        val_images_name_list = Dataset.load_images_name(dataset, val_captions.keys())
+        val_images_name_list = Dataset.load_images_name(self.dataset, val_captions.keys())
         self.val_captions = add_start_end_token(val_captions)
 
         # generate vocabulary
@@ -126,7 +139,7 @@ class WhatsSee():
         store_val_data(self.train_dir, self.val_captions, self.val_images_as_vector)
         save_model(self.model, self.model_file)
         with open(self.dataset_name_file, "w") as f:
-            f.write(dataset.get_name())
+            f.write(self.dataset.get_name())
         with open(self.epoch_file, "w") as f:
             f.write(str(self.last_epoch))
 
@@ -150,6 +163,11 @@ class WhatsSee():
         self.val_captions, self.val_images_as_vector = load_val_data(self.train_dir)
 
         return
+
+    def clean_last_training_data(self):
+        if os.path.isdir(self.train_dir):
+            # os.system("rm -rf " + self.train_dir)
+            shutil.rmtree(self.train_dir, ignore_errors=True)
 
     def start_train(self):
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -202,7 +220,7 @@ class WhatsSee():
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.model.summary()
 
-    def predict_caption(model, image_name, max_cap_len, word_index_dict, index_word_dict):
+    def predict_caption(self, image_name):
         modelvgg = VGG16(include_top=True)
 
         modelvgg.layers.pop()
@@ -216,12 +234,12 @@ class WhatsSee():
         img = modelvgg.predict(img.reshape((1,) + img.shape[:3]))
 
         in_text = 'start_seq'
-        for i in range(max_cap_len):
-            sequence = [word_index_dict[w] for w in in_text.split() if w in word_index_dict]
-            sequence = pad_sequences([sequence], maxlen=max_cap_len)
-            yhat = model.predict([img, sequence], verbose=0)
+        for i in range(self.max_cap_len):
+            sequence = [self.word_index_dict[w] for w in in_text.split() if w in self.word_index_dict]
+            sequence = pad_sequences([sequence], maxlen=self.max_cap_len)
+            yhat = self.model.predict([img, sequence], verbose=0)
             yhat = np.argmax(yhat)
-            word = index_word_dict[yhat]
+            word = self.index_word_dict[yhat]
             in_text += ' ' + word
             if word == 'end_seq':
                 break
@@ -234,26 +252,17 @@ class WhatsSee():
     def resume(self):
         if os.path.isdir(self.train_dir):
             print("RESUME LAST TRAINING")
-
             self.load_data_from_disk()
-
             self.start_train()
-
-
         else:
             print("LAST TRAINING DATA NOT FOUND")
 
-    def train(self, dataset, num_train_examples, num_val_examples):
+    def train(self, num_train_examples, num_val_examples):
         print("START NEW TRAINING")
 
-        if os.path.isdir(self.train_dir):
-            # os.system("rm -rf " + self.train_dir)
-            shutil.rmtree(self.train_dir, ignore_errors=True)
-
-        self.process_raw_data()
-
+        self.clean_last_training_data()
+        self.process_raw_data(num_train_examples, num_val_examples)
         self.save_data_on_disk()
-
         self.start_train()
 
     def predict(self, image_name):
@@ -261,8 +270,7 @@ class WhatsSee():
         if self.model == None:
             self.restore_nn()
 
-        predicted_caption = self.predict_caption(self.model, image_name, self.max_cap_len,
-                                                 self.word_index_dict, self.index_word_dict)
+        predicted_caption = self.predict_caption(image_name)
 
         print(predicted_caption)
 
@@ -375,13 +383,12 @@ if __name__ == "__main__":
 
     # create objects
     working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    ws = WhatsSee(working_dir)
-    dataset = Dataset.create_dataset(dataset_name, ws.data_dir)
+    ws = WhatsSee(dataset_name, working_dir)
 
     # select mode
     if mode == "train":
 
-        hystory = ws.train(dataset, num_train_examples, num_val_examples)
+        hystory = ws.train(num_train_examples, num_val_examples)
 
     elif mode == "resume":
 
