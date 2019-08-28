@@ -10,7 +10,6 @@ from keras import Input, Model
 from keras.layers import Dropout, Dense, LSTM, Embedding, add
 
 
-
 def create_NN(vocab_size, max_cap_len):
     input_image = Input(shape=(4096,))
     fe1 = Dropout(0.5)(input_image)
@@ -47,12 +46,12 @@ class Dataset:
         return dataset.load_captions()
 
     @staticmethod
-    def load_train_captions(dataset, num_training_examples):
-        return dataset.load_train_captions(num_training_examples)
+    def load_train_captions(dataset, num_train_examples):
+        return dataset.load_train_captions(num_train_examples)
 
     @staticmethod
-    def load_eval_captions(dataset, num_training_examples):
-        return dataset.load_eval_captions(num_training_examples)
+    def load_val_captions(dataset, num_train_examples):
+        return dataset.load_val_captions(num_train_examples)
 
     @staticmethod
     def load_images_name(dataset, images_id_list):
@@ -68,8 +67,6 @@ class Dataset:
 
     @staticmethod
     def create_dataset(dataset_name, data_dir):
-        import whats_see
-
         if dataset_name == "coco":
             dataset = COCODataset(data_dir)
         elif dataset_name == "flickr":
@@ -87,7 +84,6 @@ class FlickrDataset():
 
     def get_name(self):
         return "flickr"
-
 
     def download_dataset(self):
 
@@ -127,7 +123,7 @@ class FlickrDataset():
 
         return all_captions
 
-    def load_train_captions(self, num_training_examples):
+    def load_train_captions(self, num_train_examples):
         train_captions = collections.defaultdict(list)
         image_names = []
         with open(os.path.dirname(self.captions_file_path) + "/Flickr_8k.trainImages.txt", 'r') as f:
@@ -145,18 +141,18 @@ class FlickrDataset():
                 if (image_id + ".jpg" in image_names):
                     train_captions[image_id].append(image_cap)
 
-        if num_training_examples != 0:
+        if num_train_examples != 0:
             # Shuffle captions
             l = list(train_captions.items())
             random.shuffle(l)
             train_captions = dict(l)
 
-            train_captions = dict(list(train_captions.items())[:num_training_examples])
+            train_captions = dict(list(train_captions.items())[:num_train_examples])
 
         return train_captions
 
-    def load_eval_captions(self, num_training_examples):
-        train_captions = collections.defaultdict(list)
+    def load_val_captions(self, num_val_examples):
+        val_captions = collections.defaultdict(list)
         image_names = []
         with open(os.path.dirname(self.captions_file_path) + "/Flickr_8k.devImages.txt", 'r') as f:
             for line in f:
@@ -171,17 +167,17 @@ class FlickrDataset():
                 image_id = image_id.split('.')[0]
                 image_cap = ' '.join(image_cap)
                 if (image_id + ".jpg" in image_names):
-                    train_captions[image_id].append(image_cap)
+                    val_captions[image_id].append(image_cap)
 
-        if num_training_examples != 0:
+        if num_val_examples != 0:
             # Shuffle captions
-            l = list(train_captions.items())
+            l = list(val_captions.items())
             random.shuffle(l)
             train_captions = dict(l)
 
-            train_captions = dict(list(train_captions.items())[:num_training_examples])
+            val_captions = dict(list(val_captions.items())[:num_val_examples])
 
-        return train_captions
+        return val_captions
 
     def load_images_name(self, images_id_list):
         images_name_list = []
@@ -207,7 +203,6 @@ class COCODataset():
         self.caption_dir_path = self.subdir + "captions/"
         self.images_dir_path = self.subdir + "images/train2014/"
         self.captions_file_path = self.caption_dir_path + 'annotations/captions_train2014.json'
-
 
     def get_name(self):
         return "coco"
@@ -247,13 +242,12 @@ class COCODataset():
             print("\nEXTRACTING ZIP IMAGES FILE IN " + self.images_dir_path)
 
             with zipfile.ZipFile(images_zip, 'r') as zip:
-                zip.extractall(self.images_dir_path)
+                #                zip.extractall(self.images_dir_path)
+                zip.extractall(self.subdir + "images/")
 
             os.remove(images_zip)
 
             images_dir_path = self.images_dir_path
-
-
 
         else:
             images_dir_path = self.images_dir_path
@@ -273,11 +267,11 @@ class COCODataset():
             all_captions[image_id].append(caption_string)
         return all_captions
 
-    def load_train_captions(self, num_training_examples):
+    def load_train_captions(self, num_train_examples):
 
         all_captions = self.load_captions()  # dict image_id - caption
 
-        if num_training_examples == 0:
+        if num_train_examples == 0:
             train_captions = all_captions
 
         else:
@@ -286,25 +280,25 @@ class COCODataset():
             random.shuffle(l)
             all_captions = dict(l)
 
-            train_captions = dict(list(all_captions.items())[:num_training_examples])
+            train_captions = dict(list(all_captions.items())[:num_train_examples])
 
         return train_captions
 
-    def load_eval_captions(self, num_training_examples):
+    def load_val_captions(self, num_val_examples):
 
         all_captions = self.load_captions()  # dict image_id - caption
 
-        if num_training_examples == 0:
-            num_training_examples = 1000
+        if num_val_examples == 0:
+            num_val_examples = 1000
 
         # Shuffle captions
         l = list(all_captions.items())
         random.shuffle(l)
         all_captions = dict(l)
 
-        train_captions = dict(list(all_captions.items())[:num_training_examples])
+        val_captions = dict(list(all_captions.items())[:num_val_examples])
 
-        return train_captions
+        return val_captions
 
     def load_images_name(self, images_id_list):
         images_name_list = []

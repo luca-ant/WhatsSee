@@ -173,7 +173,7 @@ def load_val_data(train_dir):
     return val_captions, val_images_as_vector
 
 
-def preprocess_images(images_dir_path, train_images_name):
+def preprocess_images(images_dir_path, train_images_name_list):
     print("PROCESSING IMAGES")
     images_as_vector = collections.defaultdict()
     modelvgg = VGG16(include_top=True)
@@ -182,8 +182,8 @@ def preprocess_images(images_dir_path, train_images_name):
     modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)
     # modelvgg.summary()
 
-    with progressbar.ProgressBar(max_value=len(train_images_name)) as bar:
-        for i, image_name in enumerate(train_images_name):
+    with progressbar.ProgressBar(max_value=len(train_images_name_list)) as bar:
+        for i, image_name in enumerate(train_images_name_list):
             img = image.load_img(images_dir_path + image_name, target_size=(224, 224, 3))
             img = image.img_to_array(img)
 
@@ -255,9 +255,7 @@ def data_generator(dataset, train_captions, train_images_as_vector, word_index_d
 
 
 def predict_caption(model, image_name, max_cap_len, word_index_dict, index_word_dict):
-    # modelvgg = VGG16(include_top=True, weights=None)
     modelvgg = VGG16(include_top=True)
-    #       modelvgg.load_weights("../input/vgg16-weights-image-captioning/vgg16_weights_tf_dim_ordering_tf_kernels.h5")
 
     modelvgg.layers.pop()
     modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)

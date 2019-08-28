@@ -37,12 +37,12 @@ class WhatsSee():
             WhatsSee(".")
         return WhatsSee.__instance
 
-    def __init__(self, current_work_dir):
+    def __init__(self, working_dir):
         # private constructor
         if WhatsSee.__instance != None:
             raise Exception("WhatsSee class is a singleton! Use WhatsSee.get_instance()")
         else:
-            self.data_dir = current_work_dir + "/data/"
+            self.data_dir = working_dir + "/data/"
             self.vocabulary_dir = self.data_dir + "vocabulary/"
             self.weights_dir = self.data_dir + "weights/"
             self.train_dir = self.data_dir + "train/"
@@ -58,9 +58,9 @@ class WhatsSee():
             WhatsSee.__instance = self
 
     """
-    def __init__(self, current_work_dir):
+    def __init__(self, working_dir):
 
-        self.data_dir = current_work_dir + "/data/"
+        self.data_dir = working_dir + "/data/"
         self.vocabulary_dir = self.data_dir + "vocabulary/"
         self.weights_dir = self.data_dir + "weights/"
         self.train_dir = self.data_dir + "train/"
@@ -132,7 +132,7 @@ class WhatsSee():
             print("LAST TRAINING DATA NOT FOUND")
             exit(3)
 
-    def train(self, dataset, num_tran_examples, num_val_examples):
+    def train(self, dataset, num_train_examples, num_val_examples):
         print("START NEW TRAINING")
         1
         if os.path.isdir(self.train_dir):
@@ -141,13 +141,13 @@ class WhatsSee():
         captions_file_path, images_dir_path = Dataset.download_dataset(dataset)
 
         # load captions from dataset
-        train_captions = Dataset.load_train_captions(dataset, num_tran_examples)
+        train_captions = Dataset.load_train_captions(dataset, num_train_examples)
         train_captions = clean_captions(train_captions)
         train_images_name_list = Dataset.load_images_name(dataset, train_captions.keys())
         train_captions = add_start_end_token(train_captions)
         train_captions_list = to_captions_list(train_captions)
 
-        val_captions = Dataset.load_eval_captions(dataset, num_val_examples)
+        val_captions = Dataset.load_val_captions(dataset, num_val_examples)
         val_captions = clean_captions(val_captions)
         val_images_name_list = Dataset.load_images_name(dataset, val_captions.keys())
         val_captions = add_start_end_token(val_captions)
@@ -270,14 +270,14 @@ if __name__ == "__main__":
 
     # default values
     dataset_name = "flickr"
-    num_tran_examples = 0
+    num_train_examples = 0
     num_val_examples = 0
     image_file_name = ""
 
     # read args
     if mode == "train":
         num_args = 2 + (2 * 3)
-        num_tran_examples = 6000
+        num_train_examples = 6000
         num_args = min(num_args, len(sys.argv))
         #        if len(sys.argv) < num_args:
         #            usage_train()
@@ -296,7 +296,7 @@ if __name__ == "__main__":
 
             elif op == "-nt":
                 try:
-                    num_tran_examples = int(val)
+                    num_train_examples = int(val)
 
                 except:
                     print("Invalid value's option: " + val)
@@ -342,14 +342,14 @@ if __name__ == "__main__":
                 usage_predict()
 
     # create objects
-    current_work_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-    ws = WhatsSee(current_work_dir)
+    working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+    ws = WhatsSee(working_dir)
     dataset = Dataset.create_dataset(dataset_name, ws.data_dir)
 
     # select mode
     if mode == "train":
 
-        hystory = ws.train(dataset, num_tran_examples, num_val_examples)
+        hystory = ws.train(dataset, num_train_examples, num_val_examples)
 
     elif mode == "resume":
 
