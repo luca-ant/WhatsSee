@@ -1,55 +1,81 @@
+var socket = io.connect('http://' + document.domain + ':' + location.port + '/message');
 
 $(document).ready(function(){
 
+	socket.on('state', function(msg) {
+		// show/hide buttons
 
- var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-    socket.on('my response', function(msg) {
-        $('#log').append('<p>Received: ' + msg.data + '</p>');
-    });
-    $('form#emit').submit(function(event) {
-        socket.emit('my event', {data: $('#emit_data').val()});
-        return false;
-    });
-    $('form#broadcast').submit(function(event) {
-        socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
-        return false;
-    });
-
-
-
-
-//        var ws = new WebSocket('ws://' + document.domain + ':' + location.port + "/message");
-//       ws.onopen = function() {
-//            ws.send("hello")
-//           alert("Open");
-//       };
-//       ws.onclose = function() {
-//           alert("Close");
-//       };
-//       ws.onmessage = function(evt) {
-//           alert(evt.data);
-//       };
-
-
-
-
-
+	});
+	socket.on('response', function(msg) {
+	    $('#caption').text("")
+		$('#caption').text(msg.caption);
+	});
+	socket.on('log', function(msg) {
+		$('#log').val($('#log').val() +"\n"+ msg.data );
+	});
 
 
 
 });
 
+function start(){
+	socket.emit('start', {dataset: $('#dataset').val(), nt:$('#nt').val() , nv: $('#nv').val()});
+
+	return true;
+
+}
+
+function stop(){
+	socket.emit('stop');
+
+	return true;
+
+}
+
+function resume(){
+	socket.emit('resume');
+
+	return true;
+
+}
+
+function caption(){
+
+	var formData = new FormData();
+	formData.append('imagefile', $('#userimage')[0].files[0]);
+	filename = $('#userimage').val().split('\\').reverse()[0];
+	formData.append('filename', filename);
+	$.ajax({
+		url: 'image',
+		type: 'POST',
+		data: formData,
+		async: false,
+		cache: false,
+		contentType: false,
+		enctype: 'multipart/form-data',
+		processData: false,
+		success: function (response) {
+
+		    var input = document.getElementById("userimage");
+            var fReader = new FileReader();
+            fReader.readAsDataURL(input.files[0]);
+            fReader.onloadend = function(event){
+                var img = document.getElementById("im");
+                img.src = event.target.result;
+            }
+
+		    filename = $('#userimage').val().split('\\').reverse()[0];
+			socket.emit('caption', {filename: filename});
+			$('#im').attr('src',$('#userimage').val());
 
 
-// var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
-//    socket.on('my response', function(msg) {
-//        $('#log').append('<p>Received: ' + msg.data + '</p>');
-//    });
-//    $('form#emit').submit(function(event) {
-//        socket.emit('my event', {data: $('#emit_data').val()});
-//        return false;
-//    });
-//    $('form#broadcast').submit(function(event) {
-//        socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
-//        return false;
-//    });
+		}
+	});
+
+
+
+	return true;
+
+}
+
+

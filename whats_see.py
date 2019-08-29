@@ -49,9 +49,14 @@ class WhatsSee():
         else:
 
             self.data_dir = working_dir + "/data/"
+            self.generated_captions_dir = working_dir + "/output/generated_captions/"
+            self.captioned_images_dir = working_dir + "/output/captioned_images/"
             self.vocabulary_dir = self.data_dir + "vocabulary/"
             self.weights_dir = self.data_dir + "weights/"
             self.train_dir = self.data_dir + "train/"
+
+            self.captions_file_path = ""
+            self.images_dir_path = ""
 
             self.weights_file = self.weights_dir + "weights.h5"
             self.model_file = self.train_dir + "model.h5"
@@ -63,6 +68,7 @@ class WhatsSee():
             self.batch_size = 16
 
             self.model = None
+            self.modelvgg = None
             self.train_captions = None
             self.val_captions = None
             self.train_images_as_vector = None
@@ -98,7 +104,7 @@ class WhatsSee():
         self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
 
     def download_dataset(self):
-        captions_file_path, images_dir_path = Dataset.download_dataset(self.dataset)
+        self.captions_file_path, self.images_dir_path = Dataset.download_dataset(self.dataset)
 
     def process_raw_data(self, num_train_examples, num_val_examples):
 
@@ -131,8 +137,8 @@ class WhatsSee():
         self.model = create_NN(len(self.vocabulary), self.max_cap_len)
 
         # load images from dataset
-        self.train_images_as_vector = preprocess_images(images_dir_path, train_images_name_list)
-        self.val_images_as_vector = preprocess_images(images_dir_path, val_images_name_list)
+        self.train_images_as_vector = preprocess_images(self.images_dir_path, train_images_name_list)
+        self.val_images_as_vector = preprocess_images(self.images_dir_path, val_images_name_list)
 
         return
 
@@ -201,13 +207,16 @@ class WhatsSee():
                                            initial_epoch=self.last_epoch)
 
         loss = history.history['loss'][-1]
+        val_loss = history.history['val_loss'][-1]
         acc = history.history['acc'][-1]
+        val_acc = history.history['val_acc'][-1]
 
         print("SAVING WEIGHTS TO " + self.weights_file)
 
         self.model.save_weights(self.weights_file, True)
         print("TRAINING COMPLETE!")
-        print("LOSS: {:5.2f}".format(loss) + " - ACCURACY: {:5.2f}%".format(100 * acc))
+        print(
+            "LOSS: {:5.2f}".format(loss) + " - ACC: {:5.2f}%".format(100 * acc) + " - VAL_LOSS: {:5.2f}".format(val_loss) + " - VAL_ACC: {:5.2f}%".format(100 * val_acc))
 
         return history
 
@@ -225,17 +234,18 @@ class WhatsSee():
         self.model.summary()
 
     def predict_caption(self, image_name):
-        modelvgg = VGG16(include_top=True)
 
-        modelvgg.layers.pop()
-        modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)
+        if self.modelvgg == None:
+            self.modelvgg = VGG16(include_top=True)
+            self.modelvgg.layers.pop()
+            self.modelvgg = models.Model(inputs=self.modelvgg.inputs, outputs=self.modelvgg.layers[-1].output)
 
         img = image.load_img(image_name, target_size=(224, 224, 3))
 
         img = image.img_to_array(img)
 
         img = preprocess_input(img)
-        img = modelvgg.predict(img.reshape((1,) + img.shape[:3]))
+        img = self.modelvgg.predict(img.reshape((1,) + img.shape[:3]))
 
         in_text = 'start_seq'
         for i in range(self.max_cap_len):
@@ -275,12 +285,28 @@ class WhatsSee():
         if self.model == None:
             self.restore_nn()
         predicted_caption = self.predict_caption(image_name)
+
+        if not os.path.isdir(self.generated_captions_dir):
+            os.makedirs(self.generated_captions_dir)
+
+        if not os.path.isdir(self.captioned_images_dir):
+            os.makedirs(self.captioned_images_dir)
+
+        file_name = os.path.basename(image_name)
+        if not os.path.isfile(self.captioned_images_dir + file_name):
+            shutil.copyfile(image_name, self.captioned_images_dir + file_name)
+
+        caption_file_name = "".join(file_name.split(".")[:-1]) + ".txt"
+
+        with open(self.generated_captions_dir + caption_file_name, "w") as f:
+            f.write(predicted_caption)
+
         print(predicted_caption)
         return predicted_caption
 
 
 def usage():
-    print("Usage: " + sys.argv[0] + " [train | predict | resume] ")
+    print("Usage: " + sys.argv[0] + " [train | generate | resume] ")
     exit(1)
 
 
@@ -290,7 +316,7 @@ def usage_train():
 
 
 def usage_predict():
-    print("Usage: " + sys.argv[0] + " predict -f YOUR_IMAGE_FILE")
+    print("Usage: " + sys.argv[0] + " generate -f YOUR_IMAGE_FILE")
     exit(2)
 
 
@@ -363,7 +389,7 @@ if __name__ == "__main__":
             usage_resume()
 
 
-    elif mode == "predict":
+    elif mode == "generate":
         num_args = 2 + (2 * 1)
 
         if len(sys.argv) < num_args:
@@ -396,7 +422,7 @@ if __name__ == "__main__":
 
         hystory = ws.resume()
 
-    elif mode == "predict":
+    elif mode == "generate":
 
         predicted_caption = ws.predict(image_file_name)
 

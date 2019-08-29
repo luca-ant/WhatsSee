@@ -141,7 +141,7 @@ banner
 {
     background-color: rgba(12, 184, 182) !important;
 }
-#banner{
+#home{
 	background: url('../img/bg-banner.jpg') no-repeat fixed;
 	background-size: cover;
 	min-height: 650px;
@@ -168,6 +168,7 @@ banner
 	text-transform: uppercase;
 	padding-bottom:15px;
 }
+
 .button{
     font-weight:bold;
 	margin-bottom: 20px;
@@ -186,6 +187,7 @@ banner
 	background-color: rgba(12, 184, 182, 0.91);
 	border-radius: 3px;
 	color: #fff;
+
 }
 .overlay-detail a i {
     text-align: center;
@@ -200,7 +202,7 @@ banner
     display: inline-block;
 }
 /***************************************
-services
+training
 ***************************************/
 .icon i{
 	color: #0cb8b6;
@@ -216,53 +218,31 @@ services
 .icon-info p{
 	font-size: 15px !important;
 }
-/***************************************
-about
-***************************************/
-#about{
-    background-color: rgba(238, 238, 238, 0.15);
-}
-.lg-line{
-	line-height: 1.4;
-	font-size: 28px;
-}
-.more-features-box-text-icon {
-    float: left;
-    width: 40px;
-    height: 40px;
-    padding-top: 6px;
-    background: #0cb8b6;
-    -moz-border-radius: 50%;
-    -webkit-border-radius: 50%;
-    border-radius: 50%;
-    color: #fff;
-    text-align: center;
-}
-.more-features-box-text-description h3{
-    padding-bottom: 15px;
-}
-.more-features-box-text-icon i {
-    font-size: 18px;
-    line-height: 26px;
-}
-.more-features-box-text-description{
-	margin-left: 80px;
-	margin-bottom: 35px;
-}
-.sec-para{
-	padding-bottom: 10px;
-}
 
 #log{
     overflow-y: scroll;
     resize: none;
 }
+#start_button {
+    float: left;
+    margin-right: 20px;
+
 }
+#stop_button {
+    float: left;
+    margin-right: 20px;
+
 }
+#resume_button {
+    float: left;
+    margin-right: 20px;
+
+}
+
 /***************************************
-testimonial
+generate
 ***************************************/
-#testimonial{
+#generate{
     background-color: #eee;
 }
 .testi-details {
@@ -326,9 +306,9 @@ testimonial
 }
 
 /***************************************
-footer
+about
 ***************************************/
-#footer{
+#about{
 	background-color: #325C6A;
 }
 .ftr-tle {
