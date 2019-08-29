@@ -6,5 +6,4 @@ __pycache__/
 data/coco_dataset/
 data/flickr_dataset/
 data/train/
-generated_captions/
-captioned_images/
+output/
