@@ -18,7 +18,7 @@ from keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
 from tensorflow.python.keras.preprocessing import image
 
-tf.get_logger().setLevel(logging.ERROR)
+#tf.get_logger().setLevel(logging.ERROR)
 
 
 class EpochSaver(Callback):
@@ -80,6 +80,9 @@ class WhatsSee():
 
             if not os.path.isdir(self.data_dir):
                 os.makedirs(self.data_dir)
+
+            if not os.path.isdir(self.captioned_images_dir):
+                os.makedirs(self.captioned_images_dir)
 
             WhatsSee.__instance = self
 
@@ -200,9 +203,8 @@ class WhatsSee():
                                               len(self.vocabulary), self.batch_size)
         val_data_generator = data_generator(self.dataset, self.val_captions, self.val_images_as_vector, self.word_index_dict, self.max_cap_len, len(self.vocabulary),
                                             self.batch_size)
-
         print("TRAINING MODEL")
-        history = self.model.fit_generator(train_data_generator, epochs=300, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
+        history = self.model.fit_generator(train_data_generator, epochs=3, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
                                            validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
                                            initial_epoch=self.last_epoch)
 
@@ -426,4 +428,3 @@ if __name__ == "__main__":
 
         predicted_caption = ws.predict(image_file_name)
 
-    exit(0)
