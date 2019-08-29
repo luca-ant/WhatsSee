@@ -94,9 +94,13 @@ class WhatsSee():
             os.makedirs(self.data_dir)
     """
 
-    def process_raw_data(self, num_train_examples, num_val_examples):
+    def set_dataset(self, dataset_name):
+        self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
 
+    def download_dataset(self):
         captions_file_path, images_dir_path = Dataset.download_dataset(self.dataset)
+
+    def process_raw_data(self, num_train_examples, num_val_examples):
 
         # load captions from dataset
         train_captions = Dataset.load_train_captions(self.dataset, num_train_examples)
@@ -261,6 +265,7 @@ class WhatsSee():
         print("START NEW TRAINING")
 
         self.clean_last_training_data()
+        self.download_dataset()
         self.process_raw_data(num_train_examples, num_val_examples)
         self.save_data_on_disk()
         self.start_train()

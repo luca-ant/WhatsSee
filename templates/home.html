@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>WhatsSee</title>
-    <link rel="shortcut icon" type="image/x-icon" href="static/img/logo.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="static/img/logo.ico"/>
 
     <meta name="description" content="Free Bootstrap Theme by BootstrapMade.com">
     <meta name="keywords" content="free website templates, free bootstrap themes, free template, free bootstrap, free website template">
@@ -18,8 +18,8 @@
 </head>
 
 <body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="60">
-<!--banner-->
-<section id="banner" class="banner">
+<!--home-->
+<section id="home" class="banner">
     <div class="bg-color">
         <nav class="navbar navbar-default navbar-fixed-top">
             <div class="container">
@@ -34,10 +34,10 @@
                     </div>
                     <div class="collapse navbar-collapse navbar-right" id="myNavbar">
                         <ul class="nav navbar-nav">
-                            <li class="active"><a href="#banner">Home</a></li>
-                            <li class=""><a href="#service">Training</a></li>
-                            <li class=""><a href="#testimonial">Generate caption</a></li>
-                            <li class=""><a href="#footer">About</a></li>
+                            <li class="active"><a href="#home">Home</a></li>
+                            <li class=""><a href="#training">Training</a></li>
+                            <li class=""><a href="#generate_caption">Generate caption</a></li>
+                            <li class=""><a href="#about">About</a></li>
                         </ul>
                     </div>
                 </div>
@@ -62,9 +62,9 @@
         </div>
     </div>
 </section>
-<!--/ banner-->
-<!--service-->
-<section id="service" class="section-padding">
+<!--/ home-->
+<!--training-->
+<section id="training" class="section-padding">
     <div class="container">
         <div class="row">
             <div class="col-md-4 col-sm-4">
@@ -110,11 +110,11 @@
         </div>
     </div>
 </section>
-<!--/ service-->
+<!--/ training-->
 
 
-<!--testimonial-->
-<section id="testimonial" class="section-padding">
+<!--generate_caption-->
+<section id="generate_caption" class="section-padding">
     <div class="container">
         <div class="row">
             <div class="col-md-4 col-sm-4">
@@ -144,26 +144,8 @@
                     </div>
                 </form>
 
-                <!--
-                                <div class="service-info">
-                                    <div class="icon">
-                                        <i class="fa fa-stethoscope"></i>
-                                    </div>
-                                    <div class="icon-info">
-                                        <h4>24 Hour Support</h4>
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                                    </div>
-                                </div>
-                                <div class="service-info">
-                                    <div class="icon">
-                                        <i class="fa fa-ambulance"></i>
-                                    </div>
-                                    <div class="icon-info">
-                                        <h4>Emergency Services</h4>
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                                    </div>
-                                </div>
-                -->            </div>
+
+            </div>
             <div class="col-md-4 col-sm-4">
 
                 <div class="service-info">
@@ -180,12 +162,14 @@
 
                 </div>
             </div>
+        </div>
+    </div>
 </section>
-<!--/ testimonial-->
+<!--/ generate_caption-->
 
 
-<!--footer-->
-<footer id="footer">
+<!--about-->
+<footer id="about">
     <div class="top-footer">
         <div class="container">
             <div class="row">
@@ -217,13 +201,16 @@
         </div>
     </div>
 </footer>
-<!--/ footer-->
+<!--/ about-->
 
 <script src="static/js/jquery.min.js"></script>
 <script src="static/js/jquery.easing.min.js"></script>
 <script src="static/js/bootstrap.min.js"></script>
 <script src="static/js/custom.js"></script>
 <script src="static/js/form.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="
+        crossorigin="anonymous"></script>
+<script src="static/js/websocket.js"></script>
 
 </body>
 

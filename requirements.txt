@@ -4,10 +4,14 @@ certifi==2019.6.16
 chardet==3.0.4
 Click==7.0
 Flask==1.1.1
+Flask-SocketIO==4.2.1
 gast==0.2.2
+gevent==1.4.0
+gevent-websocket==0.10.1
 gitdb2==2.0.5
 GitPython==3.0.2
 google-pasta==0.1.7
+greenlet==0.4.15
 grpcio==1.23.0
 h5py==2.9.0
 idna==2.8
@@ -23,6 +27,8 @@ Pillow==6.1.0
 progressbar2==3.43.1
 protobuf==3.9.1
 pyparsing==2.4.2
+python-engineio==3.9.3
+python-socketio==4.3.1
 python-utils==2.3.0
 PyYAML==5.1.2
 requests==2.22.0

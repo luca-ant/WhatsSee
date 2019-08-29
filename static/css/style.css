@@ -150,10 +150,10 @@ banner
 }
 .bg-color{
 	background-color: RGBA(13, 70, 83, 0.78);
-	min-height: 650px;
+	min-height: 900px;
 }
 .banner-info{
-	padding-top: 130px;
+	padding-top: 200px;
 }
 .banner-logo img{
 	display: inline-block;
@@ -169,7 +169,7 @@ banner
 	padding-bottom:15px;
 }
 .button{
-
+    font-weight:bold;
 	margin-bottom: 20px;
 	padding: 10px 20px;
 	font-size: 12px;
@@ -178,6 +178,7 @@ banner
 	color: #fff;
 }
 .btn-appoint, .btn-appoint:hover, .btn-appoint:focus{
+    font-weight:bold;
 	margin-top: 30px;
 	margin-left: 20px;
 	padding: 10px 20px;
