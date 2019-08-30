@@ -18,16 +18,16 @@ from keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
 from tensorflow.python.keras.preprocessing import image
 
-#tf.get_logger().setLevel(logging.ERROR)
+tf.get_logger().setLevel(logging.ERROR)
 
 
 class EpochSaver(Callback):
-    def __init__(self, start_epoch, epoch_file):
+    def __init__(self, start_epoch, last_epoch_file):
         self.epoch = start_epoch
-        self.epoch_file = epoch_file
+        self.last_epoch_file = last_epoch_file
 
     def on_epoch_end(self, epoch, logs={}):
-        with open(self.epoch_file, "w") as f:
+        with open(self.last_epoch_file, "w") as f:
             f.write(str(self.epoch))
         self.epoch += 1
 
@@ -53,7 +53,7 @@ class WhatsSee():
             self.captioned_images_dir = working_dir + "/output/captioned_images/"
             self.vocabulary_dir = self.data_dir + "vocabulary/"
             self.weights_dir = self.data_dir + "weights/"
-            self.train_dir = self.data_dir + "train/"
+            self.train_dir = self.data_dir + "training/"
 
             self.captions_file_path = ""
             self.images_dir_path = ""
@@ -61,11 +61,13 @@ class WhatsSee():
             self.weights_file = self.weights_dir + "weights.h5"
             self.model_file = self.train_dir + "model.h5"
             self.dataset_name_file = self.train_dir + "dataset_name.txt"
-            self.epoch_file = self.train_dir + "last_epoch.txt"
+            self.last_epoch_file = self.train_dir + "last_epoch.txt"
+            self.total_epoch_file = self.train_dir + "total_epoch.txt"
 
             self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
             self.last_epoch = 0
             self.batch_size = 16
+            self.total_epochs = 3
 
             self.model = None
             self.modelvgg = None
@@ -97,7 +99,7 @@ class WhatsSee():
         self.weights_file = self.weights_dir + "weights.h5"
         self.model_file = self.train_dir + "model.h5"
         self.dataset_name_file = self.train_dir + "dataset_name.txt"
-        self.epoch_file = self.train_dir + "last_epoch.txt"
+        self.last_epoch_file = self.train_dir + "last_epoch.txt"
 
         if not os.path.isdir(self.data_dir):
             os.makedirs(self.data_dir)
@@ -105,6 +107,9 @@ class WhatsSee():
 
     def set_dataset(self, dataset_name):
         self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
+
+    def set_total_epochs(self, total_epochs):
+        self.total_epochs = total_epochs
 
     def download_dataset(self):
         self.captions_file_path, self.images_dir_path = Dataset.download_dataset(self.dataset)
@@ -153,9 +158,10 @@ class WhatsSee():
         save_model(self.model, self.model_file)
         with open(self.dataset_name_file, "w") as f:
             f.write(self.dataset.get_name())
-        with open(self.epoch_file, "w") as f:
+        with open(self.last_epoch_file, "w") as f:
             f.write(str(self.last_epoch))
-
+        with open(self.total_epoch_file, "w") as f:
+            f.write(str(self.total_epochs))
         return
 
     def load_data_from_disk(self):
@@ -166,8 +172,12 @@ class WhatsSee():
         self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
 
         # load last epoch number
-        with open(self.epoch_file, "r") as f:
+        with open(self.last_epoch_file, "r") as f:
             self.last_epoch = int(f.readline().strip())
+
+        # load total epoch number
+        with open(self.total_epoch_file, "r") as f:
+            self.total_epochs = int(f.readline().strip())
 
         # load vocabulary, train and val data
         self.vocabulary, self.word_index_dict, self.index_word_dict, self.max_cap_len = load_vocabulary(self.vocabulary_dir)
@@ -183,6 +193,11 @@ class WhatsSee():
             shutil.rmtree(self.train_dir, ignore_errors=True)
 
     def start_train(self):
+
+        if self.last_epoch >= self.total_epochs:
+            print("LAST EPOCH TOO MUCH BIG")
+            return
+
         self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
         if not os.path.isdir(self.weights_dir):
@@ -190,7 +205,7 @@ class WhatsSee():
 
         # callbacks
         save_weights_callback = ModelCheckpoint(self.weights_file, monitor='val_acc', save_weights_only=True, verbose=1, mode='auto', period=1)
-        save_epoch_callback = EpochSaver(self.last_epoch + 1, self.epoch_file)
+        save_epoch_callback = EpochSaver(self.last_epoch + 1, self.last_epoch_file)
         save_model_callback = ModelCheckpoint(self.model_file, verbose=1, period=1)
 
         # params
@@ -204,7 +219,7 @@ class WhatsSee():
         val_data_generator = data_generator(self.dataset, self.val_captions, self.val_images_as_vector, self.word_index_dict, self.max_cap_len, len(self.vocabulary),
                                             self.batch_size)
         print("TRAINING MODEL")
-        history = self.model.fit_generator(train_data_generator, epochs=3, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
+        history = self.model.fit_generator(train_data_generator, epochs=self.total_epochs, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
                                            validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
                                            initial_epoch=self.last_epoch)
 
@@ -217,10 +232,13 @@ class WhatsSee():
 
         self.model.save_weights(self.weights_file, True)
         print("TRAINING COMPLETE!")
+
+        if os.path.isdir(self.train_dir):
+            # os.system("rm -rf " + self.train_dir)
+            shutil.rmtree(self.train_dir, ignore_errors=True)
+
         print(
             "LOSS: {:5.2f}".format(loss) + " - ACC: {:5.2f}%".format(100 * acc) + " - VAL_LOSS: {:5.2f}".format(val_loss) + " - VAL_ACC: {:5.2f}%".format(100 * val_acc))
-
-        return history
 
     def restore_nn(self):
         self.vocabulary, self.word_index_dict, self.index_word_dict, self.max_cap_len = load_vocabulary(self.vocabulary_dir)
@@ -313,7 +331,7 @@ def usage():
 
 
 def usage_train():
-    print("Usage: " + sys.argv[0] + " train -d [coco | flickr] -nt NUMBER -nv NUMBER")
+    print("Usage: " + sys.argv[0] + " train -d [coco | flickr] -nt NUMBER -nv NUMBER [-ne NUMBER]")
     exit(2)
 
 
@@ -343,11 +361,12 @@ if __name__ == "__main__":
     dataset_name = "flickr"
     num_train_examples = 6000
     num_val_examples = 1000
+    total_epochs=-1
     image_file_name = ""
 
     # read args
     if mode == "train":
-        num_args = 2 + (2 * 3)
+        num_args = 2 + (2 * 4)
         num_args = min(num_args, len(sys.argv))
         #        if len(sys.argv) < num_args:
         #            usage_train()
@@ -375,6 +394,14 @@ if __name__ == "__main__":
             elif op == "-nv":
                 try:
                     num_val_examples = int(val)
+
+                except:
+                    print("Invalid value's option: " + val)
+                    usage_train()
+
+            elif op == "-ne":
+                try:
+                    total_epochs = int(val)
 
                 except:
                     print("Invalid value's option: " + val)
@@ -414,17 +441,18 @@ if __name__ == "__main__":
     # create objects
     working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
     ws = WhatsSee(dataset_name, working_dir)
+    if total_epochs != -1:
+        ws.set_total_epochs(total_epochs)
 
     # select mode
     if mode == "train":
 
-        hystory = ws.train(num_train_examples, num_val_examples)
+        ws.train(num_train_examples, num_val_examples)
 
     elif mode == "resume":
 
-        hystory = ws.resume()
+        ws.resume()
 
     elif mode == "generate":
 
         predicted_caption = ws.predict(image_file_name)
-

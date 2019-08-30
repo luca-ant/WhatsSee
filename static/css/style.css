@@ -223,19 +223,17 @@ training
     overflow-y: scroll;
     resize: none;
 }
-#start_button {
+#startbutton {
     float: left;
     margin-right: 20px;
 
 }
-#stop_button {
+#stopbutton {
     float: left;
-    margin-right: 20px;
 
 }
-#resume_button {
-    float: left;
-    margin-right: 20px;
+#resumebutton {
+    float: right;
 
 }
 

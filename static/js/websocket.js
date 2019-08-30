@@ -1,32 +1,38 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + '/message');
 
+
 $(document).ready(function(){
 
 	socket.on('state', function(msg) {
 		// show/hide buttons
 
-		start='<button type="submit" id="start_button" onclick="start_train()" class="btn btn-form button">START TRAINING</button>'
-		stop='<button type="submit" id="stop_button" onclick="stop_train()" class="btn btn-form button">STOP TRAINING</button>'
-		resume='<button type="submit" id="resume_button" onclick="resume_train()" class="btn btn-form button">RESUME TRAINING</button>'
+		start='<button type="submit" id="startbutton" onclick="starttraining()" class="btn btn-form button">START TRAINING</button>'
+		stop='<button type="submit" id="stopbutton" onclick="stoptraining()" class="btn btn-form button">STOP TRAINING</button>'
+		resume='<button type="submit" id="resumebutton" onclick="resumetraining()" class="btn btn-form button">RESUME TRAINING</button>'
 
 		$('#button_space').empty()
 
 		if(msg.running){
+				$('#button_space').empty()
+
 			$('#button_space').append(stop)
 
 		}
 		else{
 			$('#button_space').append(start)
-				if(msg.resume){
+
+if(msg.resume){
 
 			$('#button_space').append(resume)
-		}
-		}
 
-
+			        }
+}
 
 	});
 
+
+
+});
 
 	socket.on('response', function(msg) {
 		$('#caption').text("")
@@ -34,25 +40,28 @@ $(document).ready(function(){
 	});
 	socket.on('log', function(msg) {
 		$('#log').val($('#log').val() + msg.data +"\n");
+        $('#log').scrollTop($('#log')[0].scrollHeight);
+
 	});
 
-});
 
-function start_train(){
-	socket.emit('start', {dataset: $('#dataset').val(), nt:$('#nt').val() , nv: $('#nv').val()});
+
+
+function starttraining(){
+	socket.emit('start', {dataset: $('#dataset').val(), nt:$('#nt').val() , nv: $('#nv').val(),  ne: $('#ne').val()});
 
 	return true;
 
 }
 
-function stop_train(){
+function stoptraining(){
 	socket.emit('stop');
 
 	return true;
 
 }
 
-function resume_train(){
+function resumetraining(){
 	socket.emit('resume');
 
 	return true;
