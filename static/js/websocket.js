@@ -13,7 +13,7 @@ $(document).ready(function(){
 		$('#button_space').empty()
 
 		if(msg.running){
-				$('#button_space').empty()
+			$('#button_space').empty()
 
 			$('#button_space').append(stop)
 
@@ -21,18 +21,15 @@ $(document).ready(function(){
 		else{
 			$('#button_space').append(start)
 
-if(msg.resume){
+			if(msg.resume){
 
-			$('#button_space').append(resume)
+				$('#button_space').append(resume)
 
-			        }
-}
+			}
+		}
 
 	});
 
-
-
-});
 
 	socket.on('response', function(msg) {
 		$('#caption').text("")
@@ -40,9 +37,12 @@ if(msg.resume){
 	});
 	socket.on('log', function(msg) {
 		$('#log').val($('#log').val() + msg.data +"\n");
-        $('#log').scrollTop($('#log')[0].scrollHeight);
+		$('#log').scrollTop($('#log')[0].scrollHeight);
 
 	});
+
+});
+
 
 
 
@@ -70,9 +70,9 @@ function resumetraining(){
 
 function caption(){
 
-    if ( $('#userimage').val() === ''){
-    return false
-    }
+	if ( $('#userimage').val() === ''){
+		return false
+	}
 	var formData = new FormData();
 	formData.append('imagefile', $('#userimage')[0].files[0]);
 	filename = $('#userimage').val().split('\\').reverse()[0];
@@ -87,18 +87,29 @@ function caption(){
 		enctype: 'multipart/form-data',
 		processData: false,
 		success: function (response) {
+			if(response==="Image received!"){
+				filename = $('#userimage').val().split('\\').reverse()[0];
+				socket.emit('caption', {filename: filename});
+				$('#im').attr('src',$('#userimage').val());
 
-			var input = document.getElementById("userimage");
-			var fReader = new FileReader();
-			fReader.readAsDataURL(input.files[0]);
-			fReader.onloadend = function(event){
-				var img = document.getElementById("im");
-				img.src = event.target.result;
+				alert(response)
+
+				var input = document.getElementById("userimage");
+				var fReader = new FileReader();
+				fReader.readAsDataURL(input.files[0]);
+				fReader.onloadend = function(event){
+					var img = document.getElementById("im");
+					img.src = event.target.result;
+				}
+
 			}
+			else{
+				var img = document.getElementById("im");
+				img.src = "";
+				$('#caption').text("")
+				alert(response)
 
-			filename = $('#userimage').val().split('\\').reverse()[0];
-			socket.emit('caption', {filename: filename});
-			$('#im').attr('src',$('#userimage').val());
+			}
 
 
 		}

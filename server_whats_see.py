@@ -1,11 +1,10 @@
+import datetime
 import sys
 import os
 import threading
 import traceback
 from multiprocessing import Process
-from time import sleep
 
-import eventlet
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, send
 from gevent import monkey
@@ -24,47 +23,83 @@ sio = SocketIO(app, async_mode='gevent')
 p = None
 
 
+def logger(message):
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y/%m/%d - %H:%M:%S")
+
+    return timestamp + " " + message
+
+
+def get_state():
+    whatssee = whats_see.WhatsSee.get_instance()
+
+    res = False
+    run = False
+
+    if p != None and p.is_alive():
+        run = True
+
+    if os.path.isdir(whatssee.train_dir):
+        res = True
+
+    return res, run
+
+
 def start_training(num_train_examples, num_val_examples):
     global sio
 
     whatssee = whats_see.WhatsSee.get_instance()
 
-    log = "CLEANING"
+    log = logger("CLEANING")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     t = threading.Thread(target=whatssee.clean_last_training_data)
     t.start()
     t.join()
 
-    log = "DOWLOADING DATASET"
+    log = logger("DOWLOADING DATASET")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     t = threading.Thread(target=whatssee.download_dataset)
     t.start()
     t.join()
 
-    log = "PROCESSING DATA"
+    log = logger("DONE!")
+    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+
+    log = logger("PROCESSING DATA")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     t = threading.Thread(target=whatssee.process_raw_data, args=(num_train_examples, num_val_examples,))
     t.start()
     t.join()
 
-    log = "SAVE DATA"
+    log = logger("SAVE DATA")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     t = threading.Thread(target=whatssee.save_data_on_disk)
     t.start()
     t.join()
 
-    log = "TRAINING IN PROGRESS"
+    log = logger("TRAINING IN PROGRESS")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
-    t = threading.Thread(target=whatssee.start_train)
-    t.start()
-    t.join()
 
-    log = "END TRAINING"
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # t = threading.Thread(target=whatssee.start_train)
+    # t.start()
+    # t.join()
+
+    history = whatssee.start_train()
 
     resume, running = get_state()
     running = False
     sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
+
+    log = logger("END TRAINING")
+    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+
+    loss = history.history['loss'][-1]
+    val_loss = history.history['val_loss'][-1]
+    acc = history.history['acc'][-1]
+    val_acc = history.history['val_acc'][-1]
+
+    log = "LOSS: {:5.2f}".format(loss) + "\nACC: {:5.2f}%".format(100 * acc) + "\nVAL_LOSS: {:5.2f}".format(val_loss) + "\nVAL_ACC: {:5.2f}%".format(100 * val_acc)
+    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
 
     # log = "CLEANING"
     # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
@@ -78,40 +113,49 @@ def start_training(num_train_examples, num_val_examples):
     # log = "SAVE DATA"
     # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     # whatssee.save_data_on_disk()
-    # log = "STARTING TRAINING"
+    # log = "TRAINING IN PROGRESS"
     # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     # whatssee.start_train()
     # log = "END TRAINING"
     # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # resume, running = get_state()
+    # running = False
+    # sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
 
 
 def resume_training():
     global sio
+
     whatssee = whats_see.WhatsSee.get_instance()
 
-    log = "LOADING DATA"
+    log = logger("LOADING DATA")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
-    print(log)
-
     t = threading.Thread(target=whatssee.load_data_from_disk)
     t.start()
-
     t.join()
 
-    log = "TRAINING IN PROGRESS"
+    log = logger("TRAINING IN PROGRESS")
     sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
-    print(log)
-
-    t = threading.Thread(target=whatssee.start_train)
-    t.start()
-    t.join()
-
-    log = "END TRAINING"
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # t = threading.Thread(target=whatssee.start_train)
+    # t.start()
+    # t.join()
+    history = whatssee.start_train()
 
     resume, running = get_state()
     running = False
     sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
+
+    log = logger("END TRAINING")
+    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+
+    loss = history.history['loss'][-1]
+    val_loss = history.history['val_loss'][-1]
+    acc = history.history['acc'][-1]
+    val_acc = history.history['val_acc'][-1]
+
+    log = "LOSS: {:5.2f}".format(loss) + "\nACC: {:5.2f}%".format(100 * acc) + "\nVAL_LOSS: {:5.2f}".format(val_loss) + "\nVAL_ACC: {:5.2f}%".format(100 * val_acc)
+    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+
     # log = "LOADING DATA"
     # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
     # whatssee.load_data_from_disk()
@@ -120,25 +164,6 @@ def resume_training():
     # whatssee.start_train()
     # log = "END TRAINING"
     # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
-
-
-def get_state():
-    whatssee = whats_see.WhatsSee.get_instance()
-
-    res = False
-    run = False
-
-    if p != None and p.is_alive():
-        run = True
-    else:
-        run = False
-
-    if os.path.isdir(whatssee.train_dir):
-        res = True
-
-    else:
-        res = False
-    return res, run
 
 
 @app.route("/", methods=['GET'])
@@ -150,11 +175,14 @@ def home():
 def image():
     imagefile = request.files.get('imagefile', '')
     filename = request.form.get('filename')
+    ext = filename.rsplit(".", 1)[1]
+
     whatssee = whats_see.WhatsSee.get_instance()
-
-    imagefile.save(whatssee.captioned_images_dir + filename)
-
-    return "Image received!"
+    if ext.upper() in ["JPEG", "JPG", "PNG"]:
+        imagefile.save(whatssee.captioned_images_dir + filename)
+        return "Image received!"
+    else:
+        return "Invalid image!"
 
 
 @sio.on('connect', namespace='/message')
@@ -163,16 +191,17 @@ def connect():
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
 
     if running:
-        log = "TRAINING IN PROGRESS"
+        log = logger("TRAINING IN PROGRESS")
         emit('log', {'data': log}, namespace='/message', broadcast=True)
 
 
 @sio.on('resume', namespace='/message')
 def resume():
     global p
-    p = Process(target=whatssee.resume)
+    p = Process(target=resume_training, args=())
     p.start()
-    log = "\nRESUME TRAINING"
+
+    log = logger("RESUME TRAINING")
     emit('log', {'data': log}, namespace='/message', broadcast=True)
     resume, running = get_state()
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
@@ -191,7 +220,8 @@ def start(message):
     global p
     p = Process(target=start_training, args=(num_train_examples, num_val_examples,))
     p.start()
-    log = "\nNEW TRAINING"
+
+    log = logger("NEW TRAINING")
     emit('log', {'data': log}, namespace='/message', broadcast=True)
     resume, running = get_state()
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
@@ -202,7 +232,7 @@ def stop():
     global p
     p.kill()
 
-    log = "STOP TRAINING"
+    log = logger("STOP TRAINING")
     emit('log', {'data': log}, broadcast=True)
 
     resume, running = get_state()
@@ -223,4 +253,4 @@ if __name__ == "__main__":
     dataset_name = "flickr"
     whatssee = whats_see.WhatsSee(dataset_name, working_dir)
 
-    sio.run(app, host='0.0.0.0', port=PORT)
+    sio.run(app, host='0.0.0.0', port=PORT, debug=True)

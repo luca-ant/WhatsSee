@@ -1,9 +1,6 @@
-/*
-    Theme Name: Medilab
-    Theme URL: https://bootstrapmade.com/medilab-free-medical-bootstrap-theme/
-    Author: BootstrapMade.com
-    Author URL: https://bootstrapmade.com
-*/
+html {
+  scroll-behavior: smooth;
+}
 
 body {
 	font-family: 'Open Sans', sans-serif;
@@ -60,9 +57,11 @@ hr.botm-line {
 /***************************************
 banner
 ***************************************/
+
 .navbar {
     margin-bottom: 0px;
     border: 0px;
+
 }
 .navbar {
     border-radius: 0px;
@@ -223,13 +222,12 @@ training
     overflow-y: scroll;
     resize: none;
 }
-#startbutton {
+#start_button {
     float: left;
-    margin-right: 20px;
 
 }
 #stopbutton {
-    float: left;
+    float: right;
 
 }
 #resumebutton {

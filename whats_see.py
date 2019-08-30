@@ -67,7 +67,7 @@ class WhatsSee():
             self.dataset = Dataset.create_dataset(dataset_name, self.data_dir)
             self.last_epoch = 0
             self.batch_size = 16
-            self.total_epochs = 3
+            self.total_epochs = 50
 
             self.model = None
             self.modelvgg = None
@@ -234,11 +234,11 @@ class WhatsSee():
         print("TRAINING COMPLETE!")
 
         if os.path.isdir(self.train_dir):
-            # os.system("rm -rf " + self.train_dir)
             shutil.rmtree(self.train_dir, ignore_errors=True)
 
         print(
             "LOSS: {:5.2f}".format(loss) + " - ACC: {:5.2f}%".format(100 * acc) + " - VAL_LOSS: {:5.2f}".format(val_loss) + " - VAL_ACC: {:5.2f}%".format(100 * val_acc))
+        return history
 
     def restore_nn(self):
         self.vocabulary, self.word_index_dict, self.index_word_dict, self.max_cap_len = load_vocabulary(self.vocabulary_dir)
@@ -361,7 +361,7 @@ if __name__ == "__main__":
     dataset_name = "flickr"
     num_train_examples = 6000
     num_val_examples = 1000
-    total_epochs=-1
+    total_epochs = -1
     image_file_name = ""
 
     # read args
