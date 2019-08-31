@@ -68,21 +68,23 @@ socketTest.on('response', function(msg) {
 
 
 
+	$('#originalscaptiondiv').text("");
 
+
+
+
+if(msg.originalcaptions){
 	$('#originalscaptiondiv').text("ORIGINAL CAPTIONS");
 
 
 	$('#originalscaptiondiv').append('<ol id="originalscaption"></ol>');
-
-
-
 	for (var i = 0; i < msg.originalcaptions.length; i++) {
 
 
 		$('#originalscaption').append("<li>"+msg.originalcaptions[i]+ " ("+msg.bleuscores[i]+")</li>");
 
 	}
-
+}
 
 });
 

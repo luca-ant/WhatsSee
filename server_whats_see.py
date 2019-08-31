@@ -203,7 +203,8 @@ def test_caption(message):
     for b in bleu_scores:
         bleu_scores_string.append("BLEU SCORE: {:4.1f}%".format(100 * b))
 
-    emit('response', {'caption': caption, 'originalcaptions': original_captions, 'bleuscores': bleu_scores_string})
+#    emit('response', {'caption': caption, 'originalcaptions': original_captions, 'bleuscores': bleu_scores_string})
+    emit('response', {'caption': caption})
 
 
 @sio.on('get', namespace='/test')
