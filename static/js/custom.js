@@ -17,12 +17,12 @@
 
 
 
-
+2
 function get_image() {
 
-	$('#testcaption').text("");
+	$('#testcaptiondiv').text("");
 
-	$('#originalscaption').text("");
+	$('#originalscaptiondiv').text("");
 
 	var img = document.getElementById("testim");
 

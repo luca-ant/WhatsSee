@@ -193,18 +193,21 @@ def test_caption(message):
     caption = whatssee.predict(filename)
     original_captions = whatssee.dataset.get_captions_of(message['filename'])
 
-    reference = []
-    bleu_scores = []
-    for c in original_captions:
-        # reference.append(c.split())
-        bleu_scores.append(nltk.translate.bleu_score.sentence_bleu(c.strip().split(), caption.strip().split()))
+    if original_captions:
+        reference = []
+        bleu_scores = []
 
-    bleu_scores_string = []
-    for b in bleu_scores:
-        bleu_scores_string.append("BLEU SCORE: {:4.1f}%".format(100 * b))
+        for c in original_captions:
+            # reference.append(c.split())
+            bleu_scores.append(nltk.translate.bleu_score.sentence_bleu(c.strip().split(), caption.strip().split()))
 
-#    emit('response', {'caption': caption, 'originalcaptions': original_captions, 'bleuscores': bleu_scores_string})
-    emit('response', {'caption': caption})
+        bleu_scores_string = []
+        for b in bleu_scores:
+            bleu_scores_string.append("BLEU SCORE: {:4.1f}%".format(100 * b))
+
+        emit('response', {'caption': caption, 'originalcaptions': original_captions, 'bleuscores': bleu_scores_string})
+    else:
+        emit('response', {'caption': caption})
 
 
 @sio.on('get', namespace='/test')
