@@ -5,8 +5,9 @@ import sys
 import logging
 import traceback
 import numpy as np
+from keras.optimizers import Adam
 
-from model import Dataset, create_NN
+from dataset import Dataset
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, store_vocabulary, load_vocabulary, data_generator, \
     clean_captions, load_train_data, store_train_data, store_val_data, load_val_data
 from keras.engine.saving import load_model, save_model
@@ -15,6 +16,9 @@ from keras import models
 from keras.applications import VGG16
 from keras.applications.vgg16 import preprocess_input
 from keras.preprocessing.sequence import pad_sequences
+from keras import Input, Model
+from keras.layers import Dropout, Dense, LSTM, Embedding, add
+
 import tensorflow as tf
 from tensorflow.python.keras.preprocessing import image
 
@@ -30,6 +34,25 @@ class EpochSaver(Callback):
         with open(self.last_epoch_file, "w") as f:
             f.write(str(self.epoch))
         self.epoch += 1
+
+
+def create_NN(vocab_size, max_cap_len):
+    input_image = Input(shape=(4096,))
+    fe1 = Dropout(0.5)(input_image)
+    fe2 = Dense(256, activation='relu')(fe1)
+
+    input_text = Input(shape=(max_cap_len,))
+    se1 = Embedding(vocab_size, 64, mask_zero=True)(input_text)
+    se2 = Dropout(0.5)(se1)
+    se3 = LSTM(256)(se2)
+
+    decoder1 = add([fe2, se3])
+    decoder2 = Dense(256, activation='relu')(decoder1)
+    outputs = Dense(vocab_size, activation='softmax')(decoder2)
+
+    model = Model(inputs=[input_image, input_text], outputs=outputs)
+
+    return model
 
 
 class WhatsSee():
@@ -55,8 +78,6 @@ class WhatsSee():
             self.weights_dir = self.data_dir + "weights/"
             self.train_dir = self.data_dir + "training/"
 
-            self.captions_file_path = ""
-            self.images_dir_path = ""
 
             self.weights_file = self.weights_dir + "weights.h5"
             self.model_file = self.train_dir + "model.h5"
@@ -73,6 +94,7 @@ class WhatsSee():
             self.modelvgg = None
             self.train_captions = None
             self.val_captions = None
+            self.test_captions = None
             self.train_images_as_vector = None
             self.val_images_as_vector = None
             self.vocabulary = None
@@ -112,20 +134,20 @@ class WhatsSee():
         self.total_epochs = total_epochs
 
     def download_dataset(self):
-        self.captions_file_path, self.images_dir_path = Dataset.download_dataset(self.dataset)
+       self.dataset.download_dataset()
 
     def process_raw_data(self, num_train_examples, num_val_examples):
 
         # load captions from dataset
-        train_captions = Dataset.load_train_captions(self.dataset, num_train_examples)
+        train_captions = self.dataset.load_train_captions(num_train_examples)
         train_captions = clean_captions(train_captions)
-        train_images_name_list = Dataset.load_images_name(self.dataset, train_captions.keys())
+        train_images_name_list = self.dataset.load_images_name(train_captions.keys())
         self.train_captions = add_start_end_token(train_captions)
         train_captions_list = to_captions_list(train_captions)
 
-        val_captions = Dataset.load_val_captions(self.dataset, num_val_examples)
+        val_captions = self.dataset.load_val_captions(num_val_examples)
         val_captions = clean_captions(val_captions)
-        val_images_name_list = Dataset.load_images_name(self.dataset, val_captions.keys())
+        val_images_name_list = self.dataset.load_images_name(val_captions.keys())
         self.val_captions = add_start_end_token(val_captions)
 
         # generate vocabulary
@@ -142,11 +164,15 @@ class WhatsSee():
             self.index_word_dict[i] = w
             i += 1
 
+        # load images from dataset
+        self.train_images_as_vector = preprocess_images(self.dataset.train_images_dir, train_images_name_list)
+        self.val_images_as_vector = preprocess_images(self.dataset.val_images_dir, val_images_name_list)
+
+        # create model
         self.model = create_NN(len(self.vocabulary), self.max_cap_len)
 
-        # load images from dataset
-        self.train_images_as_vector = preprocess_images(self.images_dir_path, train_images_name_list)
-        self.val_images_as_vector = preprocess_images(self.images_dir_path, val_images_name_list)
+        opt = Adam(lr=0.0001)
+        self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
         return
 
@@ -197,8 +223,6 @@ class WhatsSee():
         if self.last_epoch >= self.total_epochs:
             print("LAST EPOCH TOO MUCH BIG")
             return
-
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
         if not os.path.isdir(self.weights_dir):
             os.makedirs(self.weights_dir)
@@ -256,7 +280,7 @@ class WhatsSee():
     def predict_caption(self, image_name):
 
         if self.modelvgg == None:
-            self.modelvgg = VGG16(include_top=True)
+            self.modelvgg = VGG16(include_top=True, weights="imagenet")
             self.modelvgg.layers.pop()
             self.modelvgg = models.Model(inputs=self.modelvgg.inputs, outputs=self.modelvgg.layers[-1].output)
 
@@ -304,6 +328,7 @@ class WhatsSee():
 
         if self.model == None:
             self.restore_nn()
+
         predicted_caption = self.predict_caption(image_name)
 
         if not os.path.isdir(self.generated_captions_dir):

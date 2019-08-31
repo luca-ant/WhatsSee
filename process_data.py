@@ -7,7 +7,7 @@ import string
 import progressbar
 import numpy as np
 
-from model import Dataset
+from dataset import Dataset
 
 from keras import models
 from keras.applications import VGG16
@@ -66,7 +66,7 @@ def add_start_end_token(all_captions):
 
 
 def generate_vocabulary(all_captions_list):
-    print("GENERATE VOCABULARY")
+    print("GENERATING VOCABULARY")
 
     vocabulary = []
     for c in all_captions_list:
@@ -76,7 +76,7 @@ def generate_vocabulary(all_captions_list):
 
 
 def store_vocabulary(vocabulary_dir, vocabulary, word_index_dict, index_word_dict, max_cap_len):
-    print("STORE VOCABULARY")
+    print("SAVING VOCABULARY")
 
     if not os.path.isdir(vocabulary_dir):
         os.makedirs(vocabulary_dir)
@@ -97,11 +97,11 @@ def store_vocabulary(vocabulary_dir, vocabulary, word_index_dict, index_word_dic
 
 
 def load_vocabulary(vocabulary_dir):
-    print("LOAD VOCABULARY")
+    print("LOADING VOCABULARY")
 
     if not os.path.isdir(vocabulary_dir):
         os.makedirs(vocabulary_dir)
-        print("Vocabulary NOT FOUND")
+        print("VACABULARY NOT FOUND")
         return
 
     with open(vocabulary_dir + "vocabulary.json") as f:
@@ -120,7 +120,7 @@ def load_vocabulary(vocabulary_dir):
 
 
 def store_train_data(train_dir, train_captions, train_images_as_vector):
-    print("STORE TRAIN DATA")
+    print("SAVING TRAIN DATA")
 
     if not os.path.isdir(train_dir):
         os.makedirs(train_dir)
@@ -134,7 +134,7 @@ def store_train_data(train_dir, train_captions, train_images_as_vector):
 
 
 def load_train_data(train_dir):
-    print("LOAD TRAIN DATA")
+    print("LOADING TRAIN DATA")
 
     with open(train_dir + "train_captions.json") as f:
         train_captions = json.load(f)
@@ -147,7 +147,7 @@ def load_train_data(train_dir):
 
 
 def store_val_data(train_dir, val_captions, val_images_as_vector):
-    print("STORE VAL DATA")
+    print("SAVING VAL DATA")
 
     if not os.path.isdir(train_dir):
         os.makedirs(train_dir)
@@ -161,7 +161,7 @@ def store_val_data(train_dir, val_captions, val_images_as_vector):
 
 
 def load_val_data(train_dir):
-    print("LOAD VAL DATA")
+    print("LOADING VAL DATA")
 
     with open(train_dir + "val_captions.json") as f:
         val_captions = json.load(f)
@@ -176,7 +176,7 @@ def load_val_data(train_dir):
 def preprocess_images(images_dir_path, train_images_name_list):
     print("PROCESSING IMAGES")
     images_as_vector = collections.defaultdict()
-    modelvgg = VGG16(include_top=True)
+    modelvgg = VGG16(include_top=True,weights="imagenet")
 
     modelvgg.layers.pop()
     modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)

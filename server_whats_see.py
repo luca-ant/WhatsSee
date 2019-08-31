@@ -5,6 +5,7 @@ import threading
 import traceback
 from multiprocessing import Process
 
+import nltk as nltk
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, send
 from gevent import monkey
@@ -51,34 +52,34 @@ def start_training(num_train_examples, num_val_examples):
     whatssee = whats_see.WhatsSee.get_instance()
 
     log = logger("CLEANING")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     t = threading.Thread(target=whatssee.clean_last_training_data)
     t.start()
     t.join()
 
     log = logger("DOWLOADING DATASET")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     t = threading.Thread(target=whatssee.download_dataset)
     t.start()
     t.join()
 
     log = logger("DONE!")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     log = logger("PROCESSING DATA")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     t = threading.Thread(target=whatssee.process_raw_data, args=(num_train_examples, num_val_examples,))
     t.start()
     t.join()
 
-    log = logger("SAVE DATA")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    log = logger("SAVING DATA")
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     t = threading.Thread(target=whatssee.save_data_on_disk)
     t.start()
     t.join()
 
     log = logger("TRAINING IN PROGRESS")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     # t = threading.Thread(target=whatssee.start_train)
     # t.start()
@@ -91,7 +92,7 @@ def start_training(num_train_examples, num_val_examples):
     sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
 
     log = logger("END TRAINING")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     loss = history.history['loss'][-1]
     val_loss = history.history['val_loss'][-1]
@@ -99,25 +100,25 @@ def start_training(num_train_examples, num_val_examples):
     val_acc = history.history['val_acc'][-1]
 
     log = "LOSS: {:5.2f}".format(loss) + "\nACC: {:5.2f}%".format(100 * acc) + "\nVAL_LOSS: {:5.2f}".format(val_loss) + "\nVAL_ACC: {:5.2f}%".format(100 * val_acc)
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     # log = "CLEANING"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.clean_last_training_data()
     # log = "DOWLOADING DATASET"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.download_dataset()
     # log = "PROCESSING DATA"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.process_raw_data(num_train_examples, num_val_examples)
     # log = "SAVE DATA"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.save_data_on_disk()
     # log = "TRAINING IN PROGRESS"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.start_train()
     # log = "END TRAINING"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # resume, running = get_state()
     # running = False
     # sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
@@ -129,13 +130,13 @@ def resume_training():
     whatssee = whats_see.WhatsSee.get_instance()
 
     log = logger("LOADING DATA")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     t = threading.Thread(target=whatssee.load_data_from_disk)
     t.start()
     t.join()
 
     log = logger("TRAINING IN PROGRESS")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # t = threading.Thread(target=whatssee.start_train)
     # t.start()
     # t.join()
@@ -146,7 +147,7 @@ def resume_training():
     sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
 
     log = logger("END TRAINING")
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     loss = history.history['loss'][-1]
     val_loss = history.history['val_loss'][-1]
@@ -154,16 +155,16 @@ def resume_training():
     val_acc = history.history['val_acc'][-1]
 
     log = "LOSS: {:5.2f}".format(loss) + "\nACC: {:5.2f}%".format(100 * acc) + "\nVAL_LOSS: {:5.2f}".format(val_loss) + "\nVAL_ACC: {:5.2f}%".format(100 * val_acc)
-    sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     # log = "LOADING DATA"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.load_data_from_disk()
     # log = "RESUMING TRAINING"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
     # whatssee.start_train()
     # log = "END TRAINING"
-    # sio.emit('log', {'data': log}, namespace='/message', broadcast=True)
+    # sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
 
 
 @app.route("/", methods=['GET'])
@@ -185,6 +186,34 @@ def image():
         return "Invalid image!"
 
 
+@sio.on('caption', namespace='/test')
+def test_caption(message):
+    whatssee = whats_see.WhatsSee.get_instance()
+    filename = whatssee.dataset.test_images_dir + message['filename']
+    caption = whatssee.predict(filename)
+    original_captions = whatssee.dataset.get_captions_of(message['filename'])
+
+    reference = []
+    bleu_scores = []
+    for c in original_captions:
+        # reference.append(c.split())
+        bleu_scores.append(nltk.translate.bleu_score.sentence_bleu(c.strip().split(), caption.strip().split()))
+
+    bleu_scores_string = []
+    for b in bleu_scores:
+        bleu_scores_string.append("BLEU SCORE: {:4.1f}%".format(100 * b))
+
+    emit('response', {'caption': caption, 'originalcaptions': original_captions, 'bleuscores': bleu_scores_string})
+
+
+@sio.on('get', namespace='/test')
+def get_test_images(message):
+    whatssee = whats_see.WhatsSee.get_instance()
+    whatssee.set_dataset(message["dataset"])
+    test_images_name = whatssee.dataset.get_test_image_names()
+    emit('images', {'images': test_images_name})
+
+
 @sio.on('connect', namespace='/message')
 def connect():
     resume, running = get_state()
@@ -192,7 +221,7 @@ def connect():
 
     if running:
         log = logger("TRAINING IN PROGRESS")
-        emit('log', {'data': log}, namespace='/message', broadcast=True)
+        emit('log', {'data': log}, namespace='/log', broadcast=True)
 
 
 @sio.on('resume', namespace='/message')
@@ -202,7 +231,7 @@ def resume():
     p.start()
 
     log = logger("RESUME TRAINING")
-    emit('log', {'data': log}, namespace='/message', broadcast=True)
+    emit('log', {'data': log}, namespace='/log', broadcast=True)
     resume, running = get_state()
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
 
@@ -222,7 +251,7 @@ def start(message):
     p.start()
 
     log = logger("NEW TRAINING")
-    emit('log', {'data': log}, namespace='/message', broadcast=True)
+    emit('log', {'data': log}, namespace='/log', broadcast=True)
     resume, running = get_state()
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
 

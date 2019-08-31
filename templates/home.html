@@ -45,7 +45,9 @@
                         <ul class="nav navbar-nav">
                             <li class="active"><a href="#home">Home</a></li>
                             <li class=""><a href="#training">Training</a></li>
-                            <li class=""><a href="#generate">Generate caption</a></li>
+                            <li class=""><a href="#test">Test</a></li>
+
+                            <li class=""><a href="#upload">Generate caption</a></li>
                             <li class=""><a href="#about">About</a></li>
                         </ul>
                     </div>
@@ -61,7 +63,7 @@
                     <div class="banner-text text-center">
                         <h1 class="white">Whatsee</h1>
                         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod <br>tempor incididunt ut labore et dolore magna aliqua.</p>
-                        <a href="#generate" class="btn btn-appoint">GENERATE A CAPTION NOW!</a>
+                        <a href="#upload" class="btn btn-appoint">UPLOAD AN IMAGE AND GENERATE A CAPTION NOW!</a>
                     </div>
                     <div class="overlay-detail text-center">
                         <a href="#training"><i class="fa fa-angle-down"></i></a>
@@ -109,7 +111,7 @@
                     </div>
 
 
-                    <div id="button_space" class="form-action">
+                    <div id="buttonspace" class="form-action">
                     </div>
                 </form>
             </div>
@@ -128,8 +130,77 @@
 <!--/ training-->
 
 
-<!--generate_caption-->
-<section id="generate" class="section-padding">
+<!--test-->
+<section id="test" class="section-padding">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-sm-4">
+                <h2 class="ser-title">TEST</h2>
+                <hr class="botm-line">
+                <p>Select an image to upload and click GENERATE CAPTION!</p>
+            </div>
+            <div class="col-md-4 col-sm-4">
+
+
+                <form action="" onsubmit="return false;" class="contactForm">
+
+
+                    <div class="form-group">
+                        Dataset:
+                        <select onchange="getTestImages()" name="testdataset" class="form-control br-radius-zero" id="testdataset" required/>
+                        <option value="flickr">Flickr</option>
+                        <option value="coco">COCO</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+                        Images:
+                        <select name="testimages" onchange="get_image()" class="form-control br-radius-zero" id="testimages" required/>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-action">
+                        <button id="testcaptionbutton" type="submit" onclick="testCaption()" class="btn btn-form button">GENERATE CAPTION</button>
+
+                    </div>
+                </form>
+
+
+            </div>
+            <div class="col-md-4 col-sm-4">
+
+                <div class="service-info">
+                    <div id="testcaptiondiv" class="icon-info">
+
+                    </div>
+                    <div id="testimagediv" class="icon">
+                        <img src="" id="testim" height="300px"/>
+                    </div>
+
+                    <div id="originalscaptiondiv" class="icon-info">
+
+                    </div>
+
+
+                </div>
+                <div class="service-info">
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--/ test-->
+
+
+<!--upload-->
+<section id="upload" class="section-padding">
     <div class="container">
         <div class="row">
             <div class="col-md-4 col-sm-4">
@@ -155,7 +226,7 @@
 
 
                     <div class="form-action">
-                        <button id="caption_button" type="submit" onclick="caption()" class="btn btn-form button">GENERATE CAPTION</button>
+                        <button id="captionbutton" type="submit" onclick="genCaption()" class="btn btn-form button">GENERATE CAPTION</button>
                     </div>
                 </form>
 
@@ -164,9 +235,9 @@
             <div class="col-md-4 col-sm-4">
 
                 <div class="service-info">
-                    <div class="icon-info">
+                    <div id="captiondiv" class="icon-info">
 
-                        <p id="caption"></p>
+
                     </div>
                     <div id="imagediv" class="icon">
                         <img src="" id="im" height="300px"/>
@@ -181,7 +252,7 @@
         </div>
     </div>
 </section>
-<!--/ generate_caption-->
+<!--/ upload-->
 
 
 <!--about-->

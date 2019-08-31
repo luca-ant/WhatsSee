@@ -222,7 +222,7 @@ training
     overflow-y: scroll;
     resize: none;
 }
-#start_button {
+#startbutton {
     float: left;
 
 }
@@ -236,9 +236,32 @@ training
 }
 
 /***************************************
+test
+***************************************/
+
+
+#testimagediv{
+
+margin-top:10px;
+margin-bottom:10px;
+
+
+}
+
+#originalscaption{
+display: block;
+list-style-type: decimal;
+margin-top: 1em;
+margin-bottom: 1em;
+margin-left: 0;
+margin-right: 0;
+padding-left: 40px;
+
+}
+/***************************************
 generate
 ***************************************/
-#generate{
+#test{
     background-color: #eee;
 }
 .testi-details {
