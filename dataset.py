@@ -232,7 +232,7 @@ class COCODataset():
         else:
             print("Captions already exists")
 
-        name_of_zip = 'train2014.zip'
+        name_of_zip = 'train2017.zip'
 
         if not os.path.exists(self.train_images_dir):
 
@@ -254,7 +254,7 @@ class COCODataset():
         else:
             print("Train images dataset already exists")
 
-        name_of_zip = 'val2014.zip'
+        name_of_zip = 'val2017.zip'
 
         if not os.path.exists(self.val_images_dir):
 
@@ -276,7 +276,7 @@ class COCODataset():
         else:
             print("Val images dataset already exists")
 
-        name_of_zip = 'test2014.zip'
+        name_of_zip = 'test2017.zip'
 
         if not os.path.exists(self.test_images_dir):
 

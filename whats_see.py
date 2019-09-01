@@ -350,14 +350,30 @@ class WhatsSee():
 
         with progressbar.ProgressBar(max_value=len(test_captions.keys())) as bar:
             i = 0
+            out = []
+
             for key, desc_list in test_captions.items():
                 i += 1
                 caption = self.predict_caption(self.dataset.train_images_dir + self.dataset.get_image_name(key))
 
-                references = [d.split() for d in desc_list]
+                references = [d.split()[1:-1] for d in desc_list]
                 originals.append(references)
                 predicted.append(caption.split())
                 bar.update(i)
+
+                ###########
+
+                for c in desc_list:
+                    # reference.append(c.split())
+
+                    score = sentence_bleu([c.strip().split()[1:-1]], caption.strip().split(), weights=(1.0, 0, 0, 0))
+                    if score > 0.2:
+                        out.append(key + "\n" + caption + "\n" + c + "BLEU SCORE: {:4.1f}%".format(100 * score))
+
+                ###########
+
+        for s in out:
+            print(s)
 
         # calculate BLEU score
         print('BLEU-1: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(1.0, 0, 0, 0)) * 100))
