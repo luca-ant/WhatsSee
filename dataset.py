@@ -8,7 +8,6 @@ import wget
 import zipfile
 from git import Repo, RemoteProgress
 
-from process_data import clean_caption
 
 
 class Progress(RemoteProgress):
@@ -175,6 +174,7 @@ class FlickrDataset():
                 image_id = image_id.split('.')[0]
                 image_cap = ' '.join(image_cap)
                 if (image_id + ".jpg" == image_name):
+                    from process_data import clean_caption
                     original_captions.append(clean_caption(image_cap))
         return original_captions
 

@@ -148,7 +148,7 @@ class WhatsSee():
         train_captions = clean_captions(train_captions)
         train_images_name_list = self.dataset.load_images_name(train_captions.keys())
         self.train_captions = add_start_end_token(train_captions)
-        train_captions_list = to_captions_list(train_captions)
+        train_captions_list = to_captions_list(self.train_captions)
 
         val_captions = self.dataset.load_val_captions(num_val_examples)
         val_captions = clean_captions(val_captions)
@@ -221,7 +221,7 @@ class WhatsSee():
             shutil.rmtree(self.train_dir, ignore_errors=True)
 
     def start_train(self):
-        opt = Adam(lr=0.0005)
+        opt = Adam(lr=0.001)
         self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
         # self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -370,7 +370,7 @@ class WhatsSee():
 
                     score = sentence_bleu([c.strip().split()[1:-1]], caption.strip().split(), weights=(1.0, 0, 0, 0))
                     if score > 0.3:
-                        out.append(key + "\n" + caption + "\n" + c + "BLEU SCORE: {:4.1f}%".format(100 * score))
+                        out.append(key + "\n" + caption + "\n" + c + " BLEU SCORE: {:4.1f}%".format(100 * score))
 
                 ###########
 
