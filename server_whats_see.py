@@ -23,6 +23,7 @@ monkey.patch_all()
 sio = SocketIO(app, async_mode='gevent')
 
 p = None
+evaluation_in_progress = False
 
 
 def logger(message):
@@ -33,6 +34,8 @@ def logger(message):
 
 
 def get_state():
+    global evaluation_in_progress
+
     whatssee = whats_see.WhatsSee.get_instance()
 
     res = False
@@ -44,7 +47,7 @@ def get_state():
     if os.path.isdir(whatssee.train_dir):
         res = True
 
-    return res, run
+    return res, run, evaluation_in_progress
 
 
 def start_training(num_train_examples, num_val_examples):
@@ -86,11 +89,11 @@ def start_training(num_train_examples, num_val_examples):
     # t.start()
     # t.join()
 
-    history = whatssee.start_train
+    history = whatssee.start_train()
 
-    resume, running = get_state()
+    resume, running, evalrun = get_state()
     running = False
-    sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
+    sio.emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, namespace='/message', broadcast=True)
 
     log = logger("END TRAINING")
     sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
@@ -141,11 +144,11 @@ def resume_training():
     # t = threading.Thread(target=whatssee.start_train)
     # t.start()
     # t.join()
-    history = whatssee.start_train
+    history = whatssee.start_train()
 
-    resume, running = get_state()
+    resume, running, evalrun = get_state()
     running = False
-    sio.emit('state', {'resume': resume, 'running': running}, namespace='/message', broadcast=True)
+    sio.emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, namespace='/message', broadcast=True)
 
     log = logger("END TRAINING")
     sio.emit('log', {'data': log}, namespace='/log', broadcast=True)
@@ -211,6 +214,25 @@ def test_caption(message):
         emit('response', {'caption': caption})
 
 
+@sio.on('eval', namespace='/message')
+def evaluate(message):
+    num_examples = int(message['n'])
+    global evaluation_in_progress
+    evaluation_in_progress = True
+    resume, running, evalrun = get_state()
+    emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
+
+    whatssee = whats_see.WhatsSee.get_instance()
+
+    evaluation = whatssee.evaluate_model(num_examples)
+    emit('evaluation', {'evaluation': evaluation}, broadcast=True)
+
+    evaluation_in_progress = False
+    resume, running, evalrun = get_state()
+    emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
+
+
+
 @sio.on('get', namespace='/test')
 def get_test_images(message):
     whatssee = whats_see.WhatsSee.get_instance()
@@ -221,8 +243,8 @@ def get_test_images(message):
 
 @sio.on('connect', namespace='/message')
 def connect():
-    resume, running = get_state()
-    emit('state', {'resume': resume, 'running': running}, broadcast=True)
+    resume, running, evalrun = get_state()
+    emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
 
     if running:
         log = logger("TRAINING IN PROGRESS")
@@ -237,8 +259,8 @@ def resume():
 
     log = logger("RESUMING TRAINING")
     emit('log', {'data': log}, namespace='/log', broadcast=True)
-    resume, running = get_state()
-    emit('state', {'resume': resume, 'running': running}, broadcast=True)
+    resume, running, evalrun = get_state()
+    emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
 
 
 @sio.on('start', namespace='/message')
@@ -257,8 +279,8 @@ def start(message):
 
     log = logger("STARTING NEW TRAINING")
     emit('log', {'data': log}, namespace='/log', broadcast=True)
-    resume, running = get_state()
-    emit('state', {'resume': resume, 'running': running}, broadcast=True)
+    resume, running, evalrun = get_state()
+    emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
 
 
 @sio.on('stop', namespace='/message')
@@ -269,10 +291,9 @@ def stop():
     log = logger("STOP TRAINING")
     emit('log', {'data': log}, broadcast=True)
 
-    resume, running = get_state()
-
+    resume, running, evalrun = get_state()
     running = False
-    emit('state', {'resume': resume, 'running': running}, broadcast=True)
+    emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
 
 
 @sio.on('caption', namespace='/message')

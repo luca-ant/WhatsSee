@@ -30,6 +30,25 @@ $(document).ready(function(){
 			}
 		}
 
+		if(msg.evalrun){
+
+			$('#startbutton').prop("disabled",true);
+			$('#evalbutton').prop("disabled",true);
+			$('#stopbutton').prop("disabled",true);
+			$('#resumebutton').prop("disabled",true);
+			$('#testcaptionbutton').prop("disabled",true);
+			$('#captionbutton').prop("disabled",true);
+
+		}
+		else{
+			$('#startbutton').prop("disabled",false);
+			$('#evalbutton').prop("disabled",false);
+			$('#stopbutton').prop("disabled",false);
+			$('#resumebutton').prop("disabled",false);
+			$('#testcaptionbutton').prop("disabled",false);
+			$('#captionbutton').prop("disabled",false);
+		}
+
 	});
 
 	socketTest.emit('get', {dataset: $('#testdataset').val()});
@@ -37,15 +56,6 @@ $(document).ready(function(){
 
 });
 
-
-function getTestImages(){
-
-	socketTest.emit('get', {dataset: $('#testdataset').val()});
-
-
-
-
-}
 
 
 
@@ -62,7 +72,12 @@ socketTest.on('images', function(msg) {
 
 
 socketTest.on('response', function(msg) {
-	$('#testcaptiondiv').text("GENERATED CAPTION:");
+	$('#testcaptiondiv').text("");
+
+
+	$('#testcaptiondiv').append("<h5>GENERATED CAPTION:</h5>");
+
+
 
 	$('#testcaptiondiv').append("<p>"+msg.caption+"</p>");
 
@@ -73,25 +88,50 @@ socketTest.on('response', function(msg) {
 
 
 
-if(msg.originalcaptions){
-	$('#originalscaptiondiv').text("ORIGINAL CAPTIONS");
+	if(msg.originalcaptions){
+		$('#originalscaptiondiv').text("ORIGINAL CAPTIONS:");
 
 
-	$('#originalscaptiondiv').append('<ol id="originalscaption"></ol>');
-	for (var i = 0; i < msg.originalcaptions.length; i++) {
+		$('#originalscaptiondiv').append('<ol id="originalscaption"></ol>');
+		for (var i = 0; i < msg.originalcaptions.length; i++) {
 
 
-		$('#originalscaption').append("<li>"+msg.originalcaptions[i]+ " ("+msg.bleuscores[i]+")</li>");
+			$('#originalscaption').append("<li>"+msg.originalcaptions[i]+ " ("+msg.bleuscores[i]+")</li>");
 
+		}
 	}
-}
 
 });
 
 
+socket.on('evaluation', function(msg) {
+
+	$('#evaluationdiv').text("");
+	$('#evaluationdiv').append("<h5>EVALUATION:</h5>");
+
+
+	for (var i = 0; i < msg.evaluation.length; i++) {
+
+		$('#evaluationdiv').append("<p>"+msg.evaluation[i]+"</p>");
+	}
+
+
+	$('#startbutton').prop("disabled",false);
+	$('#evalbutton').prop("disabled",false);
+	$('#stopbutton').prop("disabled",false);
+	$('#resumebutton').prop("disabled",false);
+	$('#testcaptionbutton').prop("disabled",false);
+	$('#captionbutton').prop("disabled",false);
+
+
+});
+
 socket.on('response', function(msg) {
 
-	$('#captiondiv').text("GENERATED CAPTION:");
+	$('#captiondiv').text("");
+	$('#captiondiv').append("<h5>GENERATED CAPTION:</h5>");
+
+
 
 	$('#captiondiv').append("<p>"+msg.caption+"</p>");
 
@@ -104,6 +144,14 @@ socketLog.on('log', function(msg) {
 	$('#log').scrollTop($('#log')[0].scrollHeight);
 
 });
+
+
+
+function getTestImages(){
+
+	socketTest.emit('get', {dataset: $('#testdataset').val()});
+
+}
 
 
 
@@ -128,6 +176,22 @@ function resumeTraining(){
 
 }
 
+
+function evaluatemodel(){
+
+
+	socket.emit('eval', {n:$('#evn').val()});
+
+
+	$('#startbutton').prop("disabled",true);
+	$('#evalbutton').prop("disabled",true);
+	$('#stopbutton').prop("disabled",true);
+	$('#resumebutton').prop("disabled",true);
+	$('#testcaptionbutton').prop("disabled",true);
+	$('#captionbutton').prop("disabled",true);
+
+
+}
 
 
 function testCaption(){

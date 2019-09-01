@@ -336,7 +336,7 @@ class WhatsSee():
         self.save_data_on_disk()
         self.start_train()
 
-    def evaluate(self, num_test_examples):
+    def evaluate_model(self, num_test_examples):
 
         if self.model == None:
             self.restore_nn()
@@ -637,4 +637,4 @@ if __name__ == "__main__":
         im.show()
 
     elif mode == "evaluate":
-        ws.evaluate(num_test_examples)
+        ws.evaluate_model(num_test_examples)
