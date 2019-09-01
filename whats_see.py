@@ -428,9 +428,6 @@ class WhatsSee():
         with open(self.generated_captions_dir + caption_file_name, "w") as f:
             f.write(predicted_caption)
 
-        im = Image.open(image_name)
-        im.show()
-
         print("GENERATED CAPTION: " + predicted_caption)
         return predicted_caption
 
@@ -620,7 +617,13 @@ if __name__ == "__main__":
     elif mode == "generate":
 
         predicted_caption = ws.predict(image_file_name)
+        im = Image.open(image_file_name)
+        im.show()
+
     elif mode == "test":
         ws.test(image_file_name)
+        im = Image.open(image_file_name)
+        im.show()
+
     elif mode == "evaluate":
         ws.evaluate(num_test_examples)
