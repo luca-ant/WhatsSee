@@ -18,27 +18,30 @@ from keras.utils import to_categorical
 from tensorflow.python.keras.preprocessing import image
 
 
+def clean_caption(caption):
+    punt = str.maketrans('', '', string.punctuation)
+
+    cap = caption.split()
+
+    # convert to lower case
+    cap = [word.lower() for word in cap]
+
+    # remove punctuation from each token
+    cap = [w.translate(punt) for w in cap]
+
+    #            cap = [word for word in cap if len(word) > 1]
+    return ' '.join(cap)
+
+
 def clean_captions(all_captions):
     all_captions_cleaned = {}
-    punt = str.maketrans('', '', string.punctuation)
 
     for key, capt_list in all_captions.items():
         capt_list_cleaned = []
         for i in range(len(capt_list)):
             cap = capt_list[i]
 
-            cap = cap.split()
-
-            # convert to lower case
-            cap = [word.lower() for word in cap]
-
-            # remove punctuation from each token
-            cap = [w.translate(punt) for w in cap]
-
-#            cap = [word for word in cap if len(word) > 1]
-
-            # desc = [word for word in desc if word.isalpha()]
-            capt_list_cleaned.append(' '.join(cap))
+            capt_list_cleaned.append(clean_caption(cap))
 
         all_captions_cleaned[key] = capt_list_cleaned
 

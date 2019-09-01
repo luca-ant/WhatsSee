@@ -317,16 +317,18 @@ class WhatsSee():
 
         return caption
 
+    ################################################
+
     def resume(self):
         if os.path.isdir(self.train_dir):
-            print("RESUME LAST TRAINING")
+            print("RESUMING LAST TRAINING")
             self.load_data_from_disk()
             self.start_train()
         else:
             print("LAST TRAINING DATA NOT FOUND")
 
     def train(self, num_train_examples, num_val_examples):
-        print("START NEW TRAINING")
+        print("STARTING NEW TRAINING")
 
         self.clean_last_training_data()
         self.download_dataset()
@@ -367,7 +369,7 @@ class WhatsSee():
                     # reference.append(c.split())
 
                     score = sentence_bleu([c.strip().split()[1:-1]], caption.strip().split(), weights=(1.0, 0, 0, 0))
-                    if score > 0.5:
+                    if score > 0.3:
                         out.append(key + "\n" + caption + "\n" + c + "BLEU SCORE: {:4.1f}%".format(100 * score))
 
                 ###########
@@ -375,11 +377,18 @@ class WhatsSee():
         for s in out:
             print(s)
 
+        evaluation_as_strings = []
+
         # calculate BLEU score
-        print('BLEU-1: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(1.0, 0, 0, 0)) * 100))
-        print('BLEU-2: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.5, 0.5, 0, 0)) * 100))
-        print('BLEU-3: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.3, 0.3, 0.3, 0)) * 100))
-        print('BLEU-4: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.25, 0.25, 0.25, 0.25)) * 100))
+        evaluation_as_strings.append('BLEU-1: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(1.0, 0, 0, 0)) * 100))
+        evaluation_as_strings.append('BLEU-2: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.5, 0.5, 0, 0)) * 100))
+        evaluation_as_strings.append('BLEU-3: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.3, 0.3, 0.3, 0)) * 100))
+        evaluation_as_strings.append('BLEU-4: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.25, 0.25, 0.25, 0.25)) * 100))
+
+        for e in evaluation_as_strings:
+            print(e)
+
+        return evaluation_as_strings
 
     def test(self, image_name):
         print("TESTING")
@@ -407,6 +416,7 @@ class WhatsSee():
                 print(c + " (" + b + ")")
 
     def predict(self, image_name):
+        print("GENERATING CAPTION")
 
         if self.model == None:
             self.restore_nn()
@@ -458,7 +468,7 @@ def usage_resume():
 
 
 def usage_evaluate():
-    print("Usage: " + sys.argv[0] + " evaluate")
+    print("Usage: " + sys.argv[0] + " evaluate -n NUMBER")
     exit(2)
 
 
@@ -538,9 +548,10 @@ if __name__ == "__main__":
 
     elif mode == "evaluate":
         num_args = 2 + (2 * 1)
+        num_args = min(num_args, len(sys.argv))
 
-        if len(sys.argv) < num_args:
-            usage_evaluate()
+        # if len(sys.argv) < num_args:
+        #     usage_evaluate()
 
         for i in range(2, num_args, 2):
             op = sys.argv[i]

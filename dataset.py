@@ -8,6 +8,8 @@ import wget
 import zipfile
 from git import Repo, RemoteProgress
 
+from process_data import clean_caption
+
 
 class Progress(RemoteProgress):
     def update(self, op_code, cur_count, max_count=None, message=''):
@@ -173,7 +175,7 @@ class FlickrDataset():
                 image_id = image_id.split('.')[0]
                 image_cap = ' '.join(image_cap)
                 if (image_id + ".jpg" == image_name):
-                    original_captions.append(image_cap.replace(".", ""))
+                    original_captions.append(clean_caption(image_cap))
         return original_captions
 
     def get_test_image_names(self):
@@ -352,7 +354,7 @@ class COCODataset():
                 image_id = "%012d" % (image_id)
 
                 if (self.get_image_name(image_id) == image_name):
-                    original_captions.append(caption_string.replace(".", ""))
+                    original_captions.append(clean_caption(caption_string))
 
         if not original_captions:
             with open(self.val_captions_file, 'r') as f:
@@ -364,7 +366,7 @@ class COCODataset():
                 image_id = "%012d" % (image_id)
 
                 if (self.get_image_name(image_id) == image_name):
-                    original_captions.append(caption_string.replace(".", ""))
+                    original_captions.append(clean_caption(caption_string))
 
         return original_captions
 

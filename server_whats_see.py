@@ -235,7 +235,7 @@ def resume():
     p = Process(target=resume_training, args=())
     p.start()
 
-    log = logger("RESUME TRAINING")
+    log = logger("RESUMING TRAINING")
     emit('log', {'data': log}, namespace='/log', broadcast=True)
     resume, running = get_state()
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
@@ -255,7 +255,7 @@ def start(message):
     p = Process(target=start_training, args=(num_train_examples, num_val_examples,))
     p.start()
 
-    log = logger("NEW TRAINING")
+    log = logger("STARTING NEW TRAINING")
     emit('log', {'data': log}, namespace='/log', broadcast=True)
     resume, running = get_state()
     emit('state', {'resume': resume, 'running': running}, broadcast=True)
