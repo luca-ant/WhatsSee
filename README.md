@@ -1,4 +1,5 @@
 # WhatsSee
+A simple and humble image captioning application, based on a neural network built with tensorflow.
 ## Getting started
 
 * Clone repository
