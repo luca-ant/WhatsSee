@@ -9,6 +9,7 @@ import nltk as nltk
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, send
 from gevent import monkey
+from nltk.translate.bleu_score import sentence_bleu
 
 import whats_see
 
@@ -85,7 +86,7 @@ def start_training(num_train_examples, num_val_examples):
     # t.start()
     # t.join()
 
-    history = whatssee.start_train()
+    history = whatssee.start_train
 
     resume, running = get_state()
     running = False
@@ -140,7 +141,7 @@ def resume_training():
     # t = threading.Thread(target=whatssee.start_train)
     # t.start()
     # t.join()
-    history = whatssee.start_train()
+    history = whatssee.start_train
 
     resume, running = get_state()
     running = False
@@ -199,7 +200,7 @@ def test_caption(message):
 
         for c in original_captions:
             # reference.append(c.split())
-            bleu_scores.append(nltk.translate.bleu_score.sentence_bleu(c.strip().split(), caption.strip().split()))
+            bleu_scores.append(sentence_bleu([c.strip().split()], caption.strip().split(), weights=(1.0, 0, 0, 0)))
 
         bleu_scores_string = []
         for b in bleu_scores:

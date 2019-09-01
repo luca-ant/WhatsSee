@@ -35,7 +35,7 @@ def clean_captions(all_captions):
             # remove punctuation from each token
             cap = [w.translate(punt) for w in cap]
 
-            cap = [word for word in cap if len(word) > 1]
+#            cap = [word for word in cap if len(word) > 1]
 
             # desc = [word for word in desc if word.isalpha()]
             capt_list_cleaned.append(' '.join(cap))
@@ -176,7 +176,7 @@ def load_val_data(train_dir):
 def preprocess_images(images_dir_path, train_images_name_list):
     print("PROCESSING IMAGES")
     images_as_vector = collections.defaultdict()
-    modelvgg = VGG16(include_top=True,weights="imagenet")
+    modelvgg = VGG16(weights="imagenet")
 
     modelvgg.layers.pop()
     modelvgg = models.Model(inputs=modelvgg.inputs, outputs=modelvgg.layers[-1].output)

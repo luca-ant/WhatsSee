@@ -34,7 +34,7 @@ function get_image() {
 
 	}
 	else if($('#dataset').val() ==='coco'){
-		img.src = ""+$('#testimages').val()
+		img.src = "http://images.cocodataset.org/train2017/"+$('#testimages').val()
 
 
 

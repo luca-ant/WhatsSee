@@ -4,15 +4,20 @@ import shutil
 import sys
 import logging
 import traceback
+
+import nltk
 import numpy as np
+import progressbar
+from PIL import Image
 from keras.optimizers import Adam
+from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
 from dataset import Dataset
 from process_data import preprocess_images, generate_vocabulary, to_captions_list, add_start_end_token, prepare_data, store_vocabulary, load_vocabulary, data_generator, \
     clean_captions, load_train_data, store_train_data, store_val_data, load_val_data
 from keras.engine.saving import load_model, save_model
 from keras.callbacks import ModelCheckpoint, Callback
-from keras import models
+from keras import models, metrics
 from keras.applications import VGG16
 from keras.applications.vgg16 import preprocess_input
 from keras.preprocessing.sequence import pad_sequences
@@ -78,7 +83,6 @@ class WhatsSee():
             self.weights_dir = self.data_dir + "weights/"
             self.train_dir = self.data_dir + "training/"
 
-
             self.weights_file = self.weights_dir + "weights.h5"
             self.model_file = self.train_dir + "model.h5"
             self.dataset_name_file = self.train_dir + "dataset_name.txt"
@@ -134,7 +138,7 @@ class WhatsSee():
         self.total_epochs = total_epochs
 
     def download_dataset(self):
-       self.dataset.download_dataset()
+        self.dataset.download_dataset()
 
     def process_raw_data(self, num_train_examples, num_val_examples):
 
@@ -171,9 +175,6 @@ class WhatsSee():
         # create model
         self.model = create_NN(len(self.vocabulary), self.max_cap_len)
 
-        opt = Adam(lr=0.0001)
-        self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
         return
 
     def save_data_on_disk(self):
@@ -200,7 +201,7 @@ class WhatsSee():
         # load last epoch number
         with open(self.last_epoch_file, "r") as f:
             self.last_epoch = int(f.readline().strip())
-
+        print("RESUME FROM " + str(self.last_epoch) + " EPOCH")
         # load total epoch number
         with open(self.total_epoch_file, "r") as f:
             self.total_epochs = int(f.readline().strip())
@@ -219,6 +220,10 @@ class WhatsSee():
             shutil.rmtree(self.train_dir, ignore_errors=True)
 
     def start_train(self):
+
+        opt = Adam(lr=0.0005)
+        self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+        # self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
         if self.last_epoch >= self.total_epochs:
             print("LAST EPOCH TOO MUCH BIG")
@@ -247,10 +252,11 @@ class WhatsSee():
                                            validation_steps=steps_val, callbacks=[save_weights_callback, save_model_callback, save_epoch_callback],
                                            initial_epoch=self.last_epoch)
 
-        loss = history.history['loss'][-1]
-        val_loss = history.history['val_loss'][-1]
-        acc = history.history['acc'][-1]
-        val_acc = history.history['val_acc'][-1]
+        # for i in range(self.last_epoch, self.total_epochs):
+        #     print("EPOCH: " + str(i + 1) + "/" + str(self.total_epochs))
+        #     history = self.model.fit_generator(train_data_generator, epochs=1, steps_per_epoch=steps_train, verbose=2, validation_data=val_data_generator,
+        #                                        validation_steps=steps_val, use_multiprocessing=True,
+        #                                        callbacks=[save_weights_callback, save_model_callback, save_epoch_callback])
 
         print("SAVING WEIGHTS TO " + self.weights_file)
 
@@ -260,6 +266,10 @@ class WhatsSee():
         if os.path.isdir(self.train_dir):
             shutil.rmtree(self.train_dir, ignore_errors=True)
 
+        loss = history.history['loss'][-1]
+        val_loss = history.history['val_loss'][-1]
+        acc = history.history['acc'][-1]
+        val_acc = history.history['val_acc'][-1]
         print(
             "LOSS: {:5.2f}".format(loss) + " - ACC: {:5.2f}%".format(100 * acc) + " - VAL_LOSS: {:5.2f}".format(val_loss) + " - VAL_ACC: {:5.2f}%".format(100 * val_acc))
         return history
@@ -274,13 +284,13 @@ class WhatsSee():
 
         self.model.load_weights(self.weights_file)
 
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        #        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         self.model.summary()
 
     def predict_caption(self, image_name):
 
         if self.modelvgg == None:
-            self.modelvgg = VGG16(include_top=True, weights="imagenet")
+            self.modelvgg = VGG16(weights="imagenet")
             self.modelvgg.layers.pop()
             self.modelvgg = models.Model(inputs=self.modelvgg.inputs, outputs=self.modelvgg.layers[-1].output)
 
@@ -311,7 +321,7 @@ class WhatsSee():
         if os.path.isdir(self.train_dir):
             print("RESUME LAST TRAINING")
             self.load_data_from_disk()
-            self.start_train()
+            self.start_train
         else:
             print("LAST TRAINING DATA NOT FOUND")
 
@@ -322,7 +332,63 @@ class WhatsSee():
         self.download_dataset()
         self.process_raw_data(num_train_examples, num_val_examples)
         self.save_data_on_disk()
-        self.start_train()
+        self.start_train
+
+    def evaluate(self, num_test_examples):
+
+        if self.model == None:
+            self.restore_nn()
+
+        self.set_dataset("flickr")
+
+        test_captions = self.dataset.load_test_captions(num_test_examples)
+        test_captions = clean_captions(test_captions)
+        test_captions = add_start_end_token(test_captions)
+        originals, predicted = list(), list()
+
+        print("EVALUATING MODEL")
+
+        with progressbar.ProgressBar(max_value=len(test_captions.keys())) as bar:
+            i = 0
+            for key, desc_list in test_captions.items():
+                i += 1
+                caption = self.predict_caption(self.dataset.train_images_dir + self.dataset.get_image_name(key))
+
+                references = [d.split() for d in desc_list]
+                originals.append(references)
+                predicted.append(caption.split())
+                bar.update(i)
+
+        # calculate BLEU score
+        print('BLEU-1: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(1.0, 0, 0, 0)) * 100))
+        print('BLEU-2: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.5, 0.5, 0, 0)) * 100))
+        print('BLEU-3: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.3, 0.3, 0.3, 0)) * 100))
+        print('BLEU-4: {:4.1f}%'.format(corpus_bleu(originals, predicted, weights=(0.25, 0.25, 0.25, 0.25)) * 100))
+
+    def test(self, image_name):
+        print("TESTING")
+
+        caption = self.predict(image_name)
+
+        original_captions = self.dataset.get_captions_of(os.path.basename(image_name))
+
+        if original_captions:
+            reference = []
+            bleu_scores = []
+
+            for c in original_captions:
+                # reference.append(c.split())
+                bleu_scores.append(sentence_bleu([c.strip().split()], caption.strip().split(), weights=(1.0, 0, 0, 0)))
+
+            bleu_scores_string = []
+            for b in bleu_scores:
+                bleu_scores_string.append("BLEU SCORE: {:4.1f}%".format(100 * b))
+            #
+            # for c, b in zip(original_captions, bleu_scores):
+            #     print(c + " (" + str(b) + ")")
+
+            for c, b in zip(original_captions, bleu_scores_string):
+                print(c + " (" + b + ")")
 
     def predict(self, image_name):
 
@@ -346,12 +412,15 @@ class WhatsSee():
         with open(self.generated_captions_dir + caption_file_name, "w") as f:
             f.write(predicted_caption)
 
-        print(predicted_caption)
+        im = Image.open(image_name)
+        im.show()
+
+        print("GENERATED CAPTION: " + predicted_caption)
         return predicted_caption
 
 
 def usage():
-    print("Usage: " + sys.argv[0] + " [train | generate | resume] ")
+    print("Usage: " + sys.argv[0] + " [train | generate | resume | test | evaluate] ")
     exit(1)
 
 
@@ -360,13 +429,23 @@ def usage_train():
     exit(2)
 
 
-def usage_predict():
+def usage_generate():
     print("Usage: " + sys.argv[0] + " generate -f YOUR_IMAGE_FILE")
+    exit(2)
+
+
+def usage_test():
+    print("Usage: " + sys.argv[0] + " test -f YOUR_IMAGE_FILE")
     exit(2)
 
 
 def usage_resume():
     print("Usage: " + sys.argv[0] + " resume")
+    exit(2)
+
+
+def usage_evaluate():
+    print("Usage: " + sys.argv[0] + " evaluate")
     exit(2)
 
 
@@ -384,8 +463,9 @@ if __name__ == "__main__":
 
     # default values
     dataset_name = "flickr"
-    num_train_examples = 6000
-    num_val_examples = 1000
+    num_train_examples = 0
+    num_val_examples = 0
+    num_test_examples = 0
     total_epochs = -1
     image_file_name = ""
 
@@ -443,11 +523,33 @@ if __name__ == "__main__":
             usage_resume()
 
 
+    elif mode == "evaluate":
+        num_args = 2 + (2 * 1)
+
+        if len(sys.argv) < num_args:
+            usage_evaluate()
+
+        for i in range(2, num_args, 2):
+            op = sys.argv[i]
+            val = sys.argv[i + 1]
+
+            if op == "-n":
+                try:
+                    num_test_examples = int(val)
+
+                except:
+                    print("Invalid value's option: " + val)
+                    usage_evaluate()
+            else:
+                print("Invalid option: " + op)
+
+                usage_evaluate()
+
     elif mode == "generate":
         num_args = 2 + (2 * 1)
 
         if len(sys.argv) < num_args:
-            usage_predict()
+            usage_generate()
 
         for i in range(2, num_args, 2):
             op = sys.argv[i]
@@ -457,11 +559,32 @@ if __name__ == "__main__":
                 image_file_name = val
                 if not os.path.isfile(image_file_name):
                     print("404 File Not Found: " + image_file_name)
-                    usage_predict()
+                    usage_generate()
             else:
                 print("Invalid option: " + op)
 
-                usage_predict()
+                usage_generate()
+
+
+    elif mode == "test":
+        num_args = 2 + (2 * 1)
+
+        if len(sys.argv) < num_args:
+            usage_test()
+
+        for i in range(2, num_args, 2):
+            op = sys.argv[i]
+            val = sys.argv[i + 1]
+
+            if op == "-f":
+                image_file_name = val
+                if not os.path.isfile(image_file_name):
+                    print("404 File Not Found: " + image_file_name)
+                    usage_generate()
+            else:
+                print("Invalid option: " + op)
+
+                usage_test()
 
     # create objects
     working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -481,3 +604,7 @@ if __name__ == "__main__":
     elif mode == "generate":
 
         predicted_caption = ws.predict(image_file_name)
+    elif mode == "test":
+        ws.test(image_file_name)
+    elif mode == "evaluate":
+        ws.evaluate(num_test_examples)

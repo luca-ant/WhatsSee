@@ -134,7 +134,7 @@ class FlickrDataset():
 
         return val_captions
 
-    def load_test_captions(self):
+    def load_test_captions(self, num_test_examples):
         test_captions = collections.defaultdict(list)
         image_names = []
         with open(os.path.dirname(self.caption_dir) + "/Flickr_8k.testImages.txt", 'r') as f:
@@ -151,6 +151,14 @@ class FlickrDataset():
                 image_cap = ' '.join(image_cap)
                 if (image_id + ".jpg" in image_names):
                     test_captions[image_id].append(image_cap)
+
+        if num_test_examples != 0:
+            # Shuffle captions
+            l = list(test_captions.items())
+            random.shuffle(l)
+            test_captions = dict(l)
+
+            test_captions = dict(list(test_captions.items())[:num_test_examples])
 
         return test_captions
 
@@ -195,11 +203,11 @@ class COCODataset():
 
         self.subdir = data_dir + "coco_dataset/"
         self.caption_dir = self.subdir + "captions/"
-        self.train_images_dir = self.subdir + "images/train2014/"
-        self.val_images_dir = self.subdir + "images/val2014/"
-        self.test_images_dir = self.subdir + "images/test2014/"
-        self.train_captions_file = self.caption_dir + 'annotations/captions_train2014.json'
-        self.val_captions_file = self.caption_dir + 'annotations/captions_val014.json'
+        self.train_images_dir = self.subdir + "images/train2017/"
+        self.val_images_dir = self.subdir + "images/val2017/"
+        self.test_images_dir = self.subdir + "images/test2017/"
+        self.train_captions_file = self.caption_dir + 'annotations/captions_train2017.json'
+        self.val_captions_file = self.caption_dir + 'annotations/captions_val017.json'
 
     def get_name(self):
         return "coco"
@@ -210,7 +218,7 @@ class COCODataset():
         if not os.path.exists(self.caption_dir):
             os.makedirs(self.caption_dir, exist_ok=True)
 
-            url = 'http://images.cocodataset.org/annotations/annotations_trainval2014.zip'
+            url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'
             print("DOWNLOADING CAPTIONS FROM COCO DATASET")
             captions_zip = wget.download(url, self.subdir + name_of_zip)
 
@@ -230,7 +238,7 @@ class COCODataset():
 
             os.makedirs(self.train_images_dir, exist_ok=True)
 
-            url = 'http://images.cocodataset.org/zips/train2014.zip'
+            url = 'http://images.cocodataset.org/zips/train2017.zip'
             print("DOWNLOADING TRAIN IMAGES FROM COCO DATASET")
             images_zip = wget.download(url, self.subdir + name_of_zip)
 
@@ -252,7 +260,7 @@ class COCODataset():
 
             os.makedirs(self.val_images_dir, exist_ok=True)
 
-            url = 'http://images.cocodataset.org/zips/val2014.zip'
+            url = 'http://images.cocodataset.org/zips/val2017.zip'
             print("DOWNLOADING VAL IMAGES FROM COCO DATASET")
             images_zip = wget.download(url, self.subdir + name_of_zip)
 
@@ -274,7 +282,7 @@ class COCODataset():
 
             os.makedirs(self.test_images_dir, exist_ok=True)
 
-            url = 'http://images.cocodataset.org/zips/test2014.zip'
+            url = 'http://images.cocodataset.org/zips/test2017.zip'
             print("DOWNLOADING TEST IMAGES FROM COCO DATASET")
             images_zip = wget.download(url, self.subdir + name_of_zip)
 
@@ -366,11 +374,12 @@ class COCODataset():
     def load_images_name(self, images_id_list):
         images_name_list = []
         for id in images_id_list:
-            image_name = "COCO_train2014_" + id + ".jpg"
+            image_id = "%012d" % (id)
+            image_name = image_id + ".jpg"
             if os.path.isfile(self.train_images_dir + image_name) or os.path.isfile(self.val_images_dir + image_name):
                 images_name_list.append(image_name)
         return images_name_list
 
     def get_image_name(self, image_id):
-        image_name = "COCO_train2014_" + image_id + ".jpg"
+        image_name = image_id + ".jpg"
         return image_name
