@@ -42,6 +42,7 @@ class EpochSaver(Callback):
 
 
 def create_NN(vocab_size, max_cap_len):
+    print("CREATING MODEL")
     input_image = Input(shape=(4096,))
     fe1 = Dropout(0.5)(input_image)
     fe2 = Dense(256, activation='relu')(fe1)
@@ -220,7 +221,6 @@ class WhatsSee():
             shutil.rmtree(self.train_dir, ignore_errors=True)
 
     def start_train(self):
-
         opt = Adam(lr=0.0005)
         self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
         # self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -321,7 +321,7 @@ class WhatsSee():
         if os.path.isdir(self.train_dir):
             print("RESUME LAST TRAINING")
             self.load_data_from_disk()
-            self.start_train
+            self.start_train()
         else:
             print("LAST TRAINING DATA NOT FOUND")
 
@@ -332,7 +332,7 @@ class WhatsSee():
         self.download_dataset()
         self.process_raw_data(num_train_examples, num_val_examples)
         self.save_data_on_disk()
-        self.start_train
+        self.start_train()
 
     def evaluate(self, num_test_examples):
 
@@ -367,7 +367,7 @@ class WhatsSee():
                     # reference.append(c.split())
 
                     score = sentence_bleu([c.strip().split()[1:-1]], caption.strip().split(), weights=(1.0, 0, 0, 0))
-                    if score > 0.2:
+                    if score > 0.5:
                         out.append(key + "\n" + caption + "\n" + c + "BLEU SCORE: {:4.1f}%".format(100 * score))
 
                 ###########
