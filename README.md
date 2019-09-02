@@ -80,6 +80,15 @@ To deploy web aplication, simple run *start_server.sh* script. Open a browser an
 ./start_server.sh
 ```
 
+
+[![SCREEN](https://github.com/luca-ant/WhatsSee/blob/master/examples/screen1.png?raw=true)]()
+[![SCREEN](https://github.com/luca-ant/WhatsSee/blob/master/examples/screen2.png?raw=true)]()
+[![SCREEN](https://github.com/luca-ant/WhatsSee/blob/master/examples/screen3.png?raw=true)]()
+
+
+
+
+
 ## Result
 A pre-trained model can be found on [releases page](https://github.com/luca-ant/WhatsSee/releases/latest). 
 
