@@ -42,7 +42,7 @@ python3 -m pip install -r requirements.txt
 
 ## Running
 
-* **Training:** To train the model. You can choose the dataset, the number of training and validation examples and number of epoch. (All arguments are optional) **Caution! Whole dataset will be downloaded!**
+* **Training:** To train the model. You can choose the dataset, the number of training and validation examples and number of epoch. (All arguments are optional. Use 0 as value to choose all examples) **Caution! Whole dataset will be downloaded!**
 
 ```
 python whats_see.py train -d flickr -nt 6000 -nv 1000 -ne 50
@@ -54,7 +54,7 @@ python whats_see.py train -d flickr -nt 6000 -nv 1000 -ne 50
 python whats_see.py resume
 ```
 
-* **Evaluate:** To evaluate whole model on test images and calculate **BLEU scores**. You can specify the number of test examples.
+* **Evaluate:** To evaluate whole model on test images and calculate **BLEU scores**. You can specify the number of test examples (Use 0 as value to choose all examples).
 
 ```
 python whats_see.py evaluate -n 1000
@@ -66,14 +66,11 @@ python whats_see.py evaluate -n 1000
 python whats_see.py test -f TEST_IMAGE_FILE 
 ```
 
-
 * **Generate:** To generate a caption of your own image.
 
 ```
 python whats_see.py generate -f YOUR_IMAGE_FILE 
 ```
-
-
 
 
 ## Deployment
