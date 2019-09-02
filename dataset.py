@@ -58,8 +58,7 @@ class FlickrDataset():
             # Repo.clone_from("https://github.com/luca-ant/WhatsSee_dataset.git", self.subdir, progress=Progress())
 
         else:
-            print("Captions already exists")
-            print("Images dataset already exists")
+            print("Flickr dataset already exists")
 
     def load_captions(self):
         all_captions = collections.defaultdict(list)
@@ -209,7 +208,7 @@ class COCODataset():
         self.val_images_dir = self.subdir + "images/val2017/"
         self.test_images_dir = self.subdir + "images/test2017/"
         self.train_captions_file = self.caption_dir + 'annotations/captions_train2017.json'
-        self.val_captions_file = self.caption_dir + 'annotations/captions_val017.json'
+        self.val_captions_file = self.caption_dir + 'annotations/captions_val2017.json'
 
     def get_name(self):
         return "coco"
@@ -232,7 +231,7 @@ class COCODataset():
             os.remove(captions_zip)
 
         else:
-            print("Captions already exists")
+            print("COCO captions dataset already exists")
 
         name_of_zip = 'train2017.zip'
 
@@ -254,7 +253,7 @@ class COCODataset():
 
 
         else:
-            print("Train images dataset already exists")
+            print("COCO train images dataset already exists")
 
         name_of_zip = 'val2017.zip'
 
@@ -276,7 +275,7 @@ class COCODataset():
 
 
         else:
-            print("Val images dataset already exists")
+            print("COCO val images dataset already exists")
 
         name_of_zip = 'test2017.zip'
 
@@ -298,7 +297,7 @@ class COCODataset():
 
 
         else:
-            print("Test images dataset already exists")
+            print("COCO test images dataset already exists")
 
     def load_train_captions(self, num_train_examples):
         train_captions = collections.defaultdict(list)
@@ -354,6 +353,7 @@ class COCODataset():
                 image_id = "%012d" % (image_id)
 
                 if (self.get_image_name(image_id) == image_name):
+                    from process_data import clean_caption
                     original_captions.append(clean_caption(caption_string))
 
         if not original_captions:
@@ -376,8 +376,7 @@ class COCODataset():
     def load_images_name(self, images_id_list):
         images_name_list = []
         for id in images_id_list:
-            image_id = "%012d" % (id)
-            image_name = image_id + ".jpg"
+            image_name = id + ".jpg"
             if os.path.isfile(self.train_images_dir + image_name) or os.path.isfile(self.val_images_dir + image_name):
                 images_name_list.append(image_name)
         return images_name_list

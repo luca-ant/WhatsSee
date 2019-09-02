@@ -489,7 +489,7 @@ if __name__ == "__main__":
     num_train_examples = 0
     num_val_examples = 0
     num_test_examples = 0
-    total_epochs = -1
+    total_epochs = 50
     image_file_name = ""
 
     # read args
@@ -604,7 +604,7 @@ if __name__ == "__main__":
                 image_file_name = val
                 if not os.path.isfile(image_file_name):
                     print("404 File Not Found: " + image_file_name)
-                    usage_generate()
+                    usage_test()
             else:
                 print("Invalid option: " + op)
 
@@ -613,8 +613,7 @@ if __name__ == "__main__":
     # create objects
     working_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
     ws = WhatsSee(dataset_name, working_dir)
-    if total_epochs != -1:
-        ws.set_total_epochs(total_epochs)
+    ws.set_total_epochs(total_epochs)
 
     # select mode
     if mode == "train":
