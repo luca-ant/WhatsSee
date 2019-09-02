@@ -84,7 +84,8 @@ To deploy web aplication, simple run *start_server.sh* script. Open a browser an
 ```
 
 ## Result
-A pre-trained model can be found on [releases page](https://github.com/luca-ant/WhatsSee/releases/latest)
+A pre-trained model can be found on [releases page](https://github.com/luca-ant/WhatsSee/releases/latest). 
+
 The neural network was trained on training images of **Flickr dataset** [here](https://github.com/luca-ant/WhatsSee_dataset) and it achieved the following *BLEU scores* on test images:
 
 * **BLEU-1: 49.3%**
