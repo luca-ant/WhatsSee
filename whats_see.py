@@ -4,7 +4,7 @@ import shutil
 import sys
 import logging
 import traceback
-
+import warnings
 import nltk
 import numpy as np
 import progressbar
@@ -26,6 +26,8 @@ from keras.layers import Dropout, Dense, LSTM, Embedding, add
 
 import tensorflow as tf
 from tensorflow.python.keras.preprocessing import image
+
+warnings.simplefilter("ignore")
 
 tf.get_logger().setLevel(logging.ERROR)
 
@@ -369,8 +371,8 @@ class WhatsSee():
                     # reference.append(c.split())
 
                     score = sentence_bleu([c.strip().split()[1:-1]], caption.strip().split(), weights=(1.0, 0, 0, 0))
-                    if score > 0.3:
-                        out.append(key + "\n" + caption + "\n" + c + " BLEU SCORE: {:4.1f}%".format(100 * score))
+                    if score > 0.4:
+                        out.append(key + ".jpg\n" + caption + "\n" + c + " (BLEU SCORE: {:4.1f}%)".format(100 * score)+"\n")
 
                 ###########
 

@@ -9,7 +9,6 @@ import zipfile
 from git import Repo, RemoteProgress
 
 
-
 class Progress(RemoteProgress):
     def update(self, op_code, cur_count, max_count=None, message=''):
         if op_code == 32:

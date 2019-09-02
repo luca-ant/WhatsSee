@@ -3,6 +3,7 @@ import sys
 import os
 import threading
 import traceback
+import warnings
 from multiprocessing import Process
 
 import nltk as nltk
@@ -12,6 +13,8 @@ from gevent import monkey
 from nltk.translate.bleu_score import sentence_bleu
 
 import whats_see
+
+warnings.simplefilter("ignore")
 
 PORT = 4753
 
