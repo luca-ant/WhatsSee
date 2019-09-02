@@ -311,4 +311,4 @@ if __name__ == "__main__":
     dataset_name = "flickr"
     whatssee = whats_see.WhatsSee(dataset_name, working_dir)
 
-    sio.run(app, host='0.0.0.0', port=PORT, debug=True)
+    sio.run(app, host='0.0.0.0', port=PORT)

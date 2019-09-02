@@ -344,6 +344,7 @@ class WhatsSee():
             self.restore_nn()
 
         self.set_dataset("flickr")
+        self.download_dataset()
 
         test_captions = self.dataset.load_test_captions(num_test_examples)
         test_captions = clean_captions(test_captions)
@@ -394,6 +395,8 @@ class WhatsSee():
 
     def test(self, image_name):
         print("TESTING")
+
+        self.download_dataset()
 
         caption = self.predict(image_name)
 
@@ -460,7 +463,7 @@ def usage_generate():
 
 
 def usage_test():
-    print("Usage: " + sys.argv[0] + " test -f YOUR_IMAGE_FILE")
+    print("Usage: " + sys.argv[0] + " test -f TEST_IMAGE_FILE")
     exit(2)
 
 

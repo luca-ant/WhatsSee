@@ -89,7 +89,7 @@ socketTest.on('response', function(msg) {
 
 
 	if(msg.originalcaptions){
-		$('#originalscaptiondiv').text("ORIGINAL CAPTIONS:");
+		$('#originalscaptiondiv').text("REAL CAPTIONS:");
 
 
 		$('#originalscaptiondiv').append('<ol id="originalscaption"></ol>');
