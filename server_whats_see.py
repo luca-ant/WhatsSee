@@ -235,7 +235,6 @@ def evaluate(message):
     emit('state', {'resume': resume, 'running': running, 'evalrun': evalrun}, broadcast=True)
 
 
-
 @sio.on('get', namespace='/test')
 def get_test_images(message):
     whatssee = whats_see.WhatsSee.get_instance()
@@ -292,7 +291,7 @@ def stop():
     p.kill()
 
     log = logger("STOP TRAINING")
-    emit('log', {'data': log}, broadcast=True)
+    emit('log', {'data': log}, namespace='/log', broadcast=True)
 
     resume, running, evalrun = get_state()
     running = False
