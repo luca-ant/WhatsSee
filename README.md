@@ -3,7 +3,7 @@
 <p align="center">
   <img width=350px src="https://github.com/luca-ant/WhatsSee/blob/master/static/img/logo.png?raw=true">
 </p>
-WhatsSee is a simple and humble image captioning application, based on a neural network built with tensorflow. The back-end is written in <b>Python</b> and the Web GUI front-end is built with **Flask** framework.
+WhatsSee is a simple and humble image captioning application, based on a neural network built with tensorflow. The back-end is written in <b>Python</b> and the Web GUI front-end is built with <b>Flask</b> framework.
 
 ## Getting started
 
@@ -85,7 +85,7 @@ To deploy web aplication, simple run *start_server.sh* script. Open a browser an
 
 ## Result
 A pre-trained model can be found on [releases page](https://github.com/luca-ant/WhatsSee/releases/latest)
-The neural network was trained on training images of **Flickr dataset** [link](https://github.com/luca-ant/WhatsSee_dataset) and it achieved the following BLEU scores on test images:
+The neural network was trained on training images of **Flickr dataset** [here](https://github.com/luca-ant/WhatsSee_dataset) and it achieved the following *BLEU scores* on test images:
 
 * **BLEU-1: 49.3%**
 * **BLEU-2: 30.5%**
