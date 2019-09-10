@@ -1,0 +1,87 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="74">
+            <item index="0" class="java.lang.String" itemvalue="GeoIP" />
+            <item index="1" class="java.lang.String" itemvalue="npyscreen" />
+            <item index="2" class="java.lang.String" itemvalue="ranger-fm" />
+            <item index="3" class="java.lang.String" itemvalue="Automat" />
+            <item index="4" class="java.lang.String" itemvalue="html5lib" />
+            <item index="5" class="java.lang.String" itemvalue="python-xapp" />
+            <item index="6" class="java.lang.String" itemvalue="PyYAML" />
+            <item index="7" class="java.lang.String" itemvalue="ufw" />
+            <item index="8" class="java.lang.String" itemvalue="pycups" />
+            <item index="9" class="java.lang.String" itemvalue="pycairo" />
+            <item index="10" class="java.lang.String" itemvalue="PyQt5-sip" />
+            <item index="11" class="java.lang.String" itemvalue="pycparser" />
+            <item index="12" class="java.lang.String" itemvalue="constantly" />
+            <item index="13" class="java.lang.String" itemvalue="PyGObject" />
+            <item index="14" class="java.lang.String" itemvalue="pacman-mirrors" />
+            <item index="15" class="java.lang.String" itemvalue="gufw" />
+            <item index="16" class="java.lang.String" itemvalue="pyasn1-modules" />
+            <item index="17" class="java.lang.String" itemvalue="appdirs" />
+            <item index="18" class="java.lang.String" itemvalue="ueberzug" />
+            <item index="19" class="java.lang.String" itemvalue="docopt" />
+            <item index="20" class="java.lang.String" itemvalue="PyNaCl" />
+            <item index="21" class="java.lang.String" itemvalue="rencode" />
+            <item index="22" class="java.lang.String" itemvalue="PyQt5" />
+            <item index="23" class="java.lang.String" itemvalue="pytoml" />
+            <item index="24" class="java.lang.String" itemvalue="hyperlink" />
+            <item index="25" class="java.lang.String" itemvalue="service-identity" />
+            <item index="26" class="java.lang.String" itemvalue="python-xlib" />
+            <item index="27" class="java.lang.String" itemvalue="telepot" />
+            <item index="28" class="java.lang.String" itemvalue="cryptography" />
+            <item index="29" class="java.lang.String" itemvalue="zope.interface" />
+            <item index="30" class="java.lang.String" itemvalue="attrs" />
+            <item index="31" class="java.lang.String" itemvalue="bcrypt" />
+            <item index="32" class="java.lang.String" itemvalue="psutil" />
+            <item index="33" class="java.lang.String" itemvalue="pyxdg" />
+            <item index="34" class="java.lang.String" itemvalue="paramiko" />
+            <item index="35" class="java.lang.String" itemvalue="retrying" />
+            <item index="36" class="java.lang.String" itemvalue="virtualenv" />
+            <item index="37" class="java.lang.String" itemvalue="distlib" />
+            <item index="38" class="java.lang.String" itemvalue="CacheControl" />
+            <item index="39" class="java.lang.String" itemvalue="speedtest-cli" />
+            <item index="40" class="java.lang.String" itemvalue="Mako" />
+            <item index="41" class="java.lang.String" itemvalue="msgpack" />
+            <item index="42" class="java.lang.String" itemvalue="distro" />
+            <item index="43" class="java.lang.String" itemvalue="pep517" />
+            <item index="44" class="java.lang.String" itemvalue="Pillow-SIMD" />
+            <item index="45" class="java.lang.String" itemvalue="pycurl" />
+            <item index="46" class="java.lang.String" itemvalue="async-timeout" />
+            <item index="47" class="java.lang.String" itemvalue="cffi" />
+            <item index="48" class="java.lang.String" itemvalue="pyasn1" />
+            <item index="49" class="java.lang.String" itemvalue="deluge" />
+            <item index="50" class="java.lang.String" itemvalue="ansible" />
+            <item index="51" class="java.lang.String" itemvalue="cupshelpers" />
+            <item index="52" class="java.lang.String" itemvalue="pyOpenSSL" />
+            <item index="53" class="java.lang.String" itemvalue="arandr" />
+            <item index="54" class="java.lang.String" itemvalue="louis" />
+            <item index="55" class="java.lang.String" itemvalue="asn1crypto" />
+            <item index="56" class="java.lang.String" itemvalue="Beaker" />
+            <item index="57" class="java.lang.String" itemvalue="python-libtorrent" />
+            <item index="58" class="java.lang.String" itemvalue="PyHamcrest" />
+            <item index="59" class="java.lang.String" itemvalue="packaging" />
+            <item index="60" class="java.lang.String" itemvalue="incremental" />
+            <item index="61" class="java.lang.String" itemvalue="team" />
+            <item index="62" class="java.lang.String" itemvalue="lockfile" />
+            <item index="63" class="java.lang.String" itemvalue="btrfsutil" />
+            <item index="64" class="java.lang.String" itemvalue="colorama" />
+            <item index="65" class="java.lang.String" itemvalue="aiohttp" />
+            <item index="66" class="java.lang.String" itemvalue="multidict" />
+            <item index="67" class="java.lang.String" itemvalue="progress" />
+            <item index="68" class="java.lang.String" itemvalue="yarl" />
+            <item index="69" class="java.lang.String" itemvalue="ply" />
+            <item index="70" class="java.lang.String" itemvalue="setproctitle" />
+            <item index="71" class="java.lang.String" itemvalue="webencodings" />
+            <item index="72" class="java.lang.String" itemvalue="lensfun" />
+            <item index="73" class="java.lang.String" itemvalue="Twisted" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
