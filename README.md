@@ -3,7 +3,7 @@
 <p align="center">
   <img width=350px src="https://github.com/luca-ant/WhatsSee/blob/master/static/img/logo.png?raw=true">
 </p>
-WhatsSee is a simple and humble image captioning application, based on a neural network built with tensorflow. The back-end is written in <b>Python</b> and the Web GUI front-end is built with <b>Flask</b> framework.
+WhatsSee is a simple and humble image captioning application, based on a neural network built with keras. The back-end is written in <b>Python</b> and the Web GUI front-end is built with <b>Flask</b> framework.
 
 ## Getting started
 
