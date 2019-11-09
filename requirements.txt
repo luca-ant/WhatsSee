@@ -27,7 +27,7 @@ MarkupSafe==1.1.1
 monotonic==1.5
 nltk==3.4.5
 numpy==1.17.1
-Pillow==6.1.0
+Pillow==6.2.0
 progressbar2==3.43.1
 protobuf==3.9.1
 pyparsing==2.4.2
