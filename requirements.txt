@@ -29,7 +29,7 @@ nltk==3.4.5
 numpy==1.17.1
 Pillow>=7.1.0
 progressbar2==3.43.1
-protobuf==3.9.1
+protobuf==3.15.0
 pyparsing==2.4.2
 python-engineio==3.9.3
 python-socketio==4.3.1
